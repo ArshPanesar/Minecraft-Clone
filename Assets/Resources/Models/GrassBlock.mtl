@@ -1,4 +1,15 @@
-newmtl GrassBlock
-Kd 0.1383646 1 0.1681487
+newmtl GrassBlockTop
+map_Kd GrassBlockTop.png
+Kd 1 1 1
+d 1
+
+newmtl GrassBlockSide
+map_Kd GrassBlockSide.png
+Kd 1 1 1
+d 1
+
+newmtl DirtBlock
+map_Kd DirtBlock.png
+Kd 1 1 1
 d 1
 

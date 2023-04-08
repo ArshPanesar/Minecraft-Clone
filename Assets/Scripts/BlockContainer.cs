@@ -6,11 +6,18 @@ using Dummiesman;
 
 public class BlockContainer
 {
+    public enum BlockID
+    {
+        GRASS = 0,
+        DIRT
+    };
+
     public List<GameObject> BlockList;
     //public int BlockCount = 1000000;
     public int BlockIndex = 0;
 
     public GameObject grass_block;
+    public GameObject dirt_block;
 
     public HashSet<GameObject> visibleBlocks;
 
@@ -18,7 +25,9 @@ public class BlockContainer
     {
         BlockList = new List<GameObject>();
         grass_block = new OBJLoader().Load("C:/Users/Arsh Panesar/Desktop/Redo/PGW/Minecraft/Assets/Resources/Models/GrassBlock.obj");
+        dirt_block = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
         grass_block = grass_block.transform.GetChild(0).gameObject;
+        dirt_block = dirt_block.transform.GetChild(0).gameObject;
 
         visibleBlocks = new HashSet<GameObject>();
 
@@ -34,10 +43,18 @@ public class BlockContainer
         grass_block.GetComponent<VisibleBlocksTracker>().visibleGameObjects = visibleBlocks;
     }
 
-    public GameObject CreateBlock()
+    public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
     {
         OBJLoader loader = new OBJLoader();
-        BlockList.Add(GameObject.Instantiate(grass_block));
+        switch (blockID) 
+        {
+            case BlockID.DIRT:
+                BlockList.Add(GameObject.Instantiate(dirt_block));
+                break;
+            case BlockID.GRASS:
+                BlockList.Add(GameObject.Instantiate(grass_block));
+                break;
+        }
 
         return BlockList[BlockList.Count - 1];
     }

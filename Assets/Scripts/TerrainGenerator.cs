@@ -171,7 +171,7 @@ public class TerrainGenerator : MonoBehaviour
 
             for (int j = c.y - 4; j < c.y; j++)
             {
-                var block = block_container.CreateBlock();
+                var block = block_container.CreateBlock(BlockContainer.BlockID.DIRT);
                 block.transform.position = u_grid.CellToWorld(new Vector3Int(c.x, j, c.z));
             }
         }
