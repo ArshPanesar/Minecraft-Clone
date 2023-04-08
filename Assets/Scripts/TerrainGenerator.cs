@@ -74,6 +74,7 @@ public class TerrainGenerator : MonoBehaviour
         u_grid = GetComponent<Grid>();
 
         GenerateTerrainMap();
+        block_container.GenerateRenderBatches();
         //DisplayTerrainMap();
     }
 
@@ -83,8 +84,11 @@ public class TerrainGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return))
         {
             GenerateTerrainMap();
+            block_container.GenerateRenderBatches();
             //DisplayTerrainMap();
         }
+
+        //block_container.PrintVisible();
     }
 
     public void GenerateTerrainMap()
