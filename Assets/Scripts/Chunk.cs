@@ -28,23 +28,48 @@ public class Chunk
         Vector2Int EndPosition = StartPosition + (new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
         
         int hx = 0, hy = 0;
+        
+        // TEMP
+        float max = -1.0f, min = 1.0f;
+        int hmax = WorldData.MinHeight, hmin = WorldData.MaxHeight;
+        
         for (int i = StartPosition.y; i < EndPosition.y; ++i)
         {
             for (int j = StartPosition.x; j < EndPosition.x; ++j)
             {
-                float y = (float)i / (float)100 * NoiseParam.NoiseScale;
-                float x = (float)j / (float)100 * NoiseParam.NoiseScale;
+                float y = (float)i / (float)WorldData.WorldSmoothingFactor * NoiseParam.NoiseScale;
+                float x = (float)j / (float)WorldData.WorldSmoothingFactor * NoiseParam.NoiseScale;
 
-                Vector3 Shift = Vector3.zero;//WorldData.PlayerPosition;
-                float noise = NoiseGenerator.ImprovedPerlinNoise(x + Shift.x, y + Shift.z, 0.0f);
-                noise = Mathf.Clamp(noise, -1.0f, 1.0f);
+                float noise = NoiseGenerator.FractalBrownianMotion(x, y, NoiseParam); //NoiseGenerator.ImprovedPerlinNoise(x, y, 0.0f);
+                max = Mathf.Max(max, noise);
+                min = Mathf.Min(min, noise);
+
+                noise = Mathf.Clamp(noise, -0.5f, 0.5f);
 
                 // Scaling Height from [-1, 1] Range
-                int height = (int)(((float)WorldData.MaxHeight - (float)WorldData.MinHeight) * ((noise + 1.0f) / (1.0f + 1.0f)) + (float)WorldData.MinHeight);
+                int height = (int)( ( (noise + 0.5f) / (0.5f - (-0.5f)) ) * ((float)WorldData.MaxHeight - (float)WorldData.MinHeight) + (float)WorldData.MinHeight );
+                hmax = Mathf.Max(hmax, height);
+                hmin = Mathf.Min(hmin, height);
 
-                //Debug.Log("hx, hy = " + hx + ", " + hy);
-                //Debug.Log("Size = " + HeightMap.Length + ", " + HeightMap.LongLength);
+                /*if (height < 20)
+                {
+                    height = 20;
+                }
+                else if (height < 25)
+                {
+                    height = 21;
+                }
+                else if (height < 30)
+                {
+                    height = 22;
+                }
+                else
+                {
+                    height -= 7;
+                }*/
 
+                //int height = (int)(((float)WorldData.MaxHeight - (float)WorldData.MinHeight) * ((noise - 1.0f) / (1.0f - 0.0f)) + (float)WorldData.MinHeight);
+                //int height = 3;
                 HeightMap[hx, hy] = height;
                 ++hx;
             }
@@ -52,6 +77,8 @@ public class Chunk
             hx = 0;
             ++hy;
         }
+
+        Debug.Log("Min, Max = " + hmin + ", " + hmax);
     }
 
     public void PlaceBlocks(Grid UnityGrid)

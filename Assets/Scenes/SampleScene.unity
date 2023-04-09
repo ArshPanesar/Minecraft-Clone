@@ -156,15 +156,16 @@ MonoBehaviour:
   WorldLimitSize: 64000
   ChunkSize: 32
   ChunkLoadingWindowSize: 96
+  WorldSmoothingFactor: 200
   PlayerTransform: {fileID: 963194228}
   NoiseScale: 3.5
-  Octaves: 6
+  Octaves: 1
   Amplitude: 0.5
   AmplitudeGain: 0.5
   Freq: 1
-  FreqGain: 2
+  FreqGain: 2.1
   PerlinShift: 0
-  PerlinShiftGain: 2
+  PerlinShiftGain: 0
   MaxHeight: 64
   MinHeight: 1
   LandFilter01: 0

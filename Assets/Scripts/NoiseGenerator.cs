@@ -6,8 +6,9 @@ public class NoiseGenerator
 {
     public class NoiseParameters
     {
+        public int Octaves = 1;
+
         public float NoiseScale = 3.5f;
-        public float Octaves = 1;
         public float Amplitude = 0.5f;
         public float AmplitudeGain = 0.5f;
         public float Freq = 1.0f;
@@ -37,6 +38,7 @@ public class NoiseGenerator
             amp_gain = param.AmplitudeGain;
             shift = param.PerlinShift;
             shift_gain = param.PerlinShiftGain;
+            Octaves = param.Octaves;
         }
 
         for (int i = 0; i < Octaves; ++i)

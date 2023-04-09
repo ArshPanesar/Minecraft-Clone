@@ -6,6 +6,7 @@ public class WorldData
 {
     public static int WorldSize = 64000;
     public static int ChunkSize = 32;
+    public static int WorldSmoothingFactor = 200;
     public static int NumOfChunks = WorldSize / ChunkSize;
 
     public static int MinHeight = 1;

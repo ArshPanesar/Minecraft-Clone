@@ -11,13 +11,15 @@ public class TerrainGenerator : MonoBehaviour
     public int ChunkSize = 32;
     // A Window of this Size is created around the player to know which chunks need to be loaded/unloaded
     public int ChunkLoadingWindowSize = 64;
+    // Smoothing Factor will help in smoothing out the terrain height values
+    public int WorldSmoothingFactor = 200;
 
     // Player
     public Transform PlayerTransform;
     
     // Noise Function Parameters
     public float NoiseScale = 3.5f;
-    public float Octaves = 6;
+    public int Octaves = 6;
     public float Amplitude = 0.5f;
     public float AmplitudeGain = 0.5f;
     public float Freq = 1.0f;
@@ -48,7 +50,8 @@ public class TerrainGenerator : MonoBehaviour
         WorldData.MinHeight = MinHeight;
         WorldData.MaxHeight = MaxHeight;
         WorldData.MapToWorldScaleFactor = MapToWorldScaleFactor;
-        
+        WorldData.WorldSmoothingFactor = WorldSmoothingFactor;
+
         if (PlayerTransform == null)
         {
             Debug.Log("Warning: PlayerTransform is null. Assuming Position (0, 0).");

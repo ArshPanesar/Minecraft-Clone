@@ -15,7 +15,7 @@ public class VisibleBlocksTracker : MonoBehaviour
     {
         if (visibleGameObjects == null)
         {
-            Debug.Log("VisibleBlocksTracker: visibleGameObjects is null.");
+            //Debug.Log("VisibleBlocksTracker: visibleGameObjects is null.");
         }
     }
 
