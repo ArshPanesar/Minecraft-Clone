@@ -153,19 +153,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 410d0d9b43639c745a7c80f998459053, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GridWidth: 200
-  GridHeight: 200
-  NoiseScale: 10.1
-  Octaves: 2
+  WorldLimitSize: 64000
+  ChunkSize: 32
+  ChunkLoadingWindowSize: 96
+  PlayerTransform: {fileID: 963194228}
+  NoiseScale: 3.5
+  Octaves: 6
   Amplitude: 0.5
-  Freq: 1
-  FreqGain: 2.5
   AmplitudeGain: 0.5
+  Freq: 1
+  FreqGain: 2
   PerlinShift: 0
-  PerlinShiftGain: 0
+  PerlinShiftGain: 2
   MaxHeight: 64
-  MinHeight: 0
-  LandFilter01: 0.3
+  MinHeight: 1
+  LandFilter01: 0
   MapToWorldScaleFactor: 1
 --- !u!4 &78210339
 Transform:
@@ -829,7 +831,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -390, y: 200}
+  m_AnchoredPosition: {x: -365, y: 200}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1852982250

@@ -13,43 +13,42 @@ public class BlockContainer
     };
 
     public List<GameObject> BlockList;
-    //public int BlockCount = 1000000;
     public int BlockIndex = 0;
 
-    public GameObject grass_block;
-    public GameObject dirt_block;
+    public GameObject GrassBlock;
+    public GameObject DirtBlock;
 
-    public HashSet<GameObject> visibleBlocks;
+    public HashSet<GameObject> VisibleBlocks;
 
     public BlockContainer()
     {
         BlockList = new List<GameObject>();
-        grass_block = new OBJLoader().Load("C:/Users/Arsh Panesar/Desktop/Redo/PGW/Minecraft/Assets/Resources/Models/GrassBlock.obj");
-        dirt_block = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
-        grass_block = grass_block.transform.GetChild(0).gameObject;
-        dirt_block = dirt_block.transform.GetChild(0).gameObject;
+        GrassBlock = new OBJLoader().Load("Assets/Resources/Models/GrassBlock.obj");
+        DirtBlock = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
+        GrassBlock = GrassBlock.transform.GetChild(0).gameObject;
+        DirtBlock = DirtBlock.transform.GetChild(0).gameObject;
 
-        visibleBlocks = new HashSet<GameObject>();
+        VisibleBlocks = new HashSet<GameObject>();
 
         // Set Up the GrassBlock
         //
         // Block will never move
-        grass_block.isStatic = true;
+        GrassBlock.isStatic = true;
         // Instance all materials in every block
-        var materials = grass_block.GetComponentInChildren<MeshRenderer>().sharedMaterials;
+        var materials = GrassBlock.GetComponentInChildren<MeshRenderer>().sharedMaterials;
         foreach (var m in materials) 
         {
             m.enableInstancing = true;
         }
-        materials = dirt_block.GetComponentInChildren<MeshRenderer>().sharedMaterials;
+        materials = DirtBlock.GetComponentInChildren<MeshRenderer>().sharedMaterials;
         foreach (var m in materials)
         {
             m.enableInstancing = true;
         }
 
         // Attach Visibility Notifier
-        grass_block.AddComponent<VisibleBlocksTracker>();
-        grass_block.GetComponent<VisibleBlocksTracker>().visibleGameObjects = visibleBlocks;
+        GrassBlock.AddComponent<VisibleBlocksTracker>();
+        GrassBlock.GetComponent<VisibleBlocksTracker>().visibleGameObjects = VisibleBlocks;
     }
 
     public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
@@ -58,10 +57,10 @@ public class BlockContainer
         switch (blockID) 
         {
             case BlockID.DIRT:
-                BlockList.Add(GameObject.Instantiate(dirt_block));
+                BlockList.Add(GameObject.Instantiate(DirtBlock));
                 break;
             case BlockID.GRASS:
-                BlockList.Add(GameObject.Instantiate(grass_block));
+                BlockList.Add(GameObject.Instantiate(GrassBlock));
                 break;
         }
 
@@ -93,6 +92,6 @@ public class BlockContainer
 
     public void PrintVisible()
     {
-        Debug.Log(visibleBlocks.Count);
+        Debug.Log(VisibleBlocks.Count);
     }
 }
