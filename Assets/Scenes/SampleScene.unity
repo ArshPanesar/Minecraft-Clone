@@ -155,7 +155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GridWidth: 200
   GridHeight: 200
-  NoiseScale: 5
+  NoiseScale: 10.1
   Octaves: 2
   Amplitude: 0.5
   Freq: 1
