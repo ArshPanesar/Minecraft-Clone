@@ -99,10 +99,6 @@ public class TerrainGenerator : MonoBehaviour
         LoaderWindowStart /= WorldData.ChunkSize;
         LoaderWindowEnd /= WorldData.ChunkSize;
 
-
-        //Debug.Log("Window Start: " + LoaderWindowStart.x + ", " + LoaderWindowStart.y);
-        //Debug.Log("Window End: " + LoaderWindowEnd.x + ", " + LoaderWindowEnd.y);
-
         Vector2Int CurrentChunkPosition = new Vector2Int();
         for (int i = LoaderWindowStart.y; i < LoaderWindowEnd.y; ++i)
         {
@@ -119,8 +115,6 @@ public class TerrainGenerator : MonoBehaviour
                     ChunkMap.Add(CurrentChunkPosition, NewChunk);
                     WorldData.ActiveChunkSet.Add(CurrentChunkPosition);
                 }
-
-                //ActiveChunksInCurrTick.Add(CurrentChunkPosition);
             }
         }
 

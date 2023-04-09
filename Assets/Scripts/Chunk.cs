@@ -28,11 +28,6 @@ public class Chunk
         Vector2Int EndPosition = StartPosition + (new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
         
         int hx = 0, hy = 0;
-        
-        // TEMP
-        float max = -1.0f, min = 1.0f;
-        int hmax = WorldData.MinHeight, hmin = WorldData.MaxHeight;
-        
         for (int i = StartPosition.y; i < EndPosition.y; ++i)
         {
             for (int j = StartPosition.x; j < EndPosition.x; ++j)
@@ -40,18 +35,13 @@ public class Chunk
                 float y = (float)i / (float)WorldData.WorldSmoothingFactor * NoiseParam.NoiseScale;
                 float x = (float)j / (float)WorldData.WorldSmoothingFactor * NoiseParam.NoiseScale;
 
-                float noise = NoiseGenerator.FractalBrownianMotion(x, y, NoiseParam); //NoiseGenerator.ImprovedPerlinNoise(x, y, 0.0f);
-                max = Mathf.Max(max, noise);
-                min = Mathf.Min(min, noise);
-
+                float noise = NoiseGenerator.FractalBrownianMotion(x, y, NoiseParam);
                 noise = Mathf.Clamp(noise, -0.5f, 0.5f);
 
                 // Scaling Height from [-1, 1] Range
                 int height = (int)( ( (noise + 0.5f) / (0.5f - (-0.5f)) ) * ((float)WorldData.MaxHeight - (float)WorldData.MinHeight) + (float)WorldData.MinHeight );
-                hmax = Mathf.Max(hmax, height);
-                hmin = Mathf.Min(hmin, height);
-
-                /*if (height < 20)
+                
+                if (height < 20)
                 {
                     height = 20;
                 }
@@ -66,10 +56,8 @@ public class Chunk
                 else
                 {
                     height -= 7;
-                }*/
+                }
 
-                //int height = (int)(((float)WorldData.MaxHeight - (float)WorldData.MinHeight) * ((noise - 1.0f) / (1.0f - 0.0f)) + (float)WorldData.MinHeight);
-                //int height = 3;
                 HeightMap[hx, hy] = height;
                 ++hx;
             }
@@ -77,8 +65,6 @@ public class Chunk
             hx = 0;
             ++hy;
         }
-
-        Debug.Log("Min, Max = " + hmin + ", " + hmax);
     }
 
     public void PlaceBlocks(Grid UnityGrid)
@@ -108,6 +94,18 @@ public class Chunk
                 }
             }
         }
+
+        // Fill Empty
+        foreach (var cell in high_cell_list)
+        {
+            for (int i = cell.y - 4; i < cell.y; ++i)
+            {
+                var block = BlockContainer.CreateBlock(BlockContainer.BlockID.DIRT);
+                block.transform.position = UnityGrid.CellToWorld(new Vector3Int(cell.x, i, cell.z));
+            }
+        }
+
+        BlockContainer.GenerateRenderBatches();
     }
 
     public void Destroy()
