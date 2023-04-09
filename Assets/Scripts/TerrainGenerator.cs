@@ -87,7 +87,7 @@ public class TerrainGenerator : MonoBehaviour
             block_container.GenerateRenderBatches();
             //DisplayTerrainMap();
         }
-
+        
         //block_container.PrintVisible();
     }
 

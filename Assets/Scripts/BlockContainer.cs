@@ -35,9 +35,18 @@ public class BlockContainer
         //
         // Block will never move
         grass_block.isStatic = true;
-        // Instance this block
-        var material = grass_block.GetComponentInChildren<MeshRenderer>().sharedMaterial;
-        material.enableInstancing = true;
+        // Instance all materials in every block
+        var materials = grass_block.GetComponentInChildren<MeshRenderer>().sharedMaterials;
+        foreach (var m in materials) 
+        {
+            m.enableInstancing = true;
+        }
+        materials = dirt_block.GetComponentInChildren<MeshRenderer>().sharedMaterials;
+        foreach (var m in materials)
+        {
+            m.enableInstancing = true;
+        }
+
         // Attach Visibility Notifier
         grass_block.AddComponent<VisibleBlocksTracker>();
         grass_block.GetComponent<VisibleBlocksTracker>().visibleGameObjects = visibleBlocks;

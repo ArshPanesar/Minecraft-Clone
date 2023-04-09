@@ -49,6 +49,9 @@ public class FreeCam : MonoBehaviour
     /// </summary>
     private bool looking = false;
 
+    // Fog
+    public bool fog = true;
+
     void Update()
     {
         var fastMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
@@ -141,5 +144,11 @@ public class FreeCam : MonoBehaviour
         looking = false;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+    }
+
+    public void ToggleFog()
+    {
+        fog = !fog;
+        RenderSettings.fog = fog;
     }
 }
