@@ -24,6 +24,8 @@ public struct Chunk
 
 public class ChunkUtility
 {
+    public static Grid UnityGridRef;
+
     public static void Reset(Chunk ChunkRef)
     {
         if (!ChunkRef.Initialized)
@@ -98,7 +100,7 @@ public class ChunkUtility
     static readonly ProfilerMarker s_ProfMarker1 = new ProfilerMarker("PlaceBlocks() [Generating Blocks]");
     static readonly ProfilerMarker s_ProfMarker2 = new ProfilerMarker("PlaceBlocks() [Filling Dirt Blocks]");
 
-    public static void PlaceBlocks(Chunk ChunkRef, Grid UnityGrid)
+    public static void PlaceBlocks(Chunk ChunkRef)
     {
         //s_ProfMarker1.Begin();
 
@@ -121,7 +123,7 @@ public class ChunkUtility
 
 
                 //Debug.Log(new Vector3Int(x, y, z) + " ? " + UnityGrid.CellToWorld(new Vector3Int(x, y, z)));
-                block.transform.position = UnityGrid.CellToWorld(new Vector3Int(x, y, z));
+                block.transform.position = UnityGridRef.CellToWorld(new Vector3Int(x, y, z));
 
                 if (HeightMap[j, i] > WorldData.MinHeight)
                 {
@@ -140,7 +142,7 @@ public class ChunkUtility
             for (int i = cell.y - 4; i < cell.y; ++i)
             {
                 var block = BlockContainerRef.CreateBlock(BlockContainer.BlockID.DIRT);
-                block.transform.position = UnityGrid.CellToWorld(new Vector3Int(cell.x, i, cell.z));
+                block.transform.position = UnityGridRef.CellToWorld(new Vector3Int(cell.x, i, cell.z));
             }
         }
         //s_ProfMarker2.End();
@@ -177,7 +179,7 @@ public struct GenerateChunkJob : IJob
         ChunkUtility.Reset(NewChunk);
 
         ChunkUtility.Generate(NewChunk, StartPosition, NoiseParam);
-        ChunkUtility.PlaceBlocks(NewChunk, TerrainGenerator.ChunkGenJobData.UnityGrid[UnityGridIndex]);
+        ChunkUtility.PlaceBlocks(NewChunk);
     }
 }
 

@@ -104,6 +104,8 @@ public class TerrainGenerator : MonoBehaviour
         ChunkGenJobData.UnityGrid = new List<Grid>();
         ChunkGenJobData.UnityGrid.Add(UnityGrid);
 
+        ChunkUtility.UnityGridRef = UnityGrid;
+
         // Loading Game Models
         BlockContainer.LoadModels();
     }
