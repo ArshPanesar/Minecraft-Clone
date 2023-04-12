@@ -4,42 +4,44 @@ using UnityEngine;
 
 public class NoiseGenerator
 {
-    public class NoiseParameters
+    public struct NoiseParameters
     {
-        public int Octaves = 1;
+        public int Octaves;
 
-        public float NoiseScale = 3.5f;
-        public float Amplitude = 0.5f;
-        public float AmplitudeGain = 0.5f;
-        public float Freq = 1.0f;
-        public float FreqGain = 2.0f;
-        public float PerlinShift = 0.0f;
-        public float PerlinShiftGain = 2.0f;
-    }
+        public float NoiseScale;
+        public float Amplitude;
+        public float AmplitudeGain;
+        public float Freq;
+        public float FreqGain;
+        public float PerlinShift;
+        public float PerlinShiftGain;
+
+        public void Reset()
+        {
+            Octaves = 1;
+
+            NoiseScale = 3.5f;
+            Amplitude = 0.5f;
+            AmplitudeGain = 0.5f;
+            Freq = 1.0f;
+            FreqGain = 2.0f;
+            PerlinShift = 0.0f;
+            PerlinShiftGain = 2.0f;
+        }
+}
 
     // NOISE FUNCTIONS
-    public static float FractalBrownianMotion(float x, float y, NoiseParameters param = null)
+    public static float FractalBrownianMotion(float x, float y, NoiseParameters param)
     {
         float val = 0.0f;
 
-        int Octaves = 1;
-        float amplitude = 0.5f;
-        float amp_gain = 0.5f;
-        float freq = 1.0f;
-        float freq_gain = 2.0f;
-        float shift = 0.0f;
-        float shift_gain = 0.0f;
-        
-        if (param != null)
-        {
-            amplitude = param.Amplitude;
-            freq = param.Freq;
-            freq_gain = param.FreqGain;
-            amp_gain = param.AmplitudeGain;
-            shift = param.PerlinShift;
-            shift_gain = param.PerlinShiftGain;
-            Octaves = param.Octaves;
-        }
+        float amplitude = param.Amplitude;
+        float freq = param.Freq;
+        float freq_gain = param.FreqGain;
+        float amp_gain = param.AmplitudeGain;
+        float shift = param.PerlinShift;
+        float shift_gain = param.PerlinShiftGain;
+        float Octaves = param.Octaves;
 
         for (int i = 0; i < Octaves; ++i)
         {

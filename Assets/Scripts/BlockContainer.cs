@@ -15,20 +15,25 @@ public class BlockContainer
     public List<GameObject> BlockList;
     public int BlockIndex = 0;
 
-    public GameObject GrassBlock;
-    public GameObject DirtBlock;
+    public static GameObject GrassBlock;
+    public static GameObject DirtBlock;
 
     public HashSet<GameObject> VisibleBlocks;
 
     public BlockContainer()
     {
         BlockList = new List<GameObject>();
+
+        VisibleBlocks = new HashSet<GameObject>();
+    }
+
+    public static void LoadModels()
+    {
         GrassBlock = new OBJLoader().Load("Assets/Resources/Models/GrassBlock.obj");
         DirtBlock = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
         GrassBlock = GrassBlock.transform.GetChild(0).gameObject;
         DirtBlock = DirtBlock.transform.GetChild(0).gameObject;
 
-        VisibleBlocks = new HashSet<GameObject>();
 
         // Set Up the GrassBlock
         //
@@ -36,7 +41,7 @@ public class BlockContainer
         GrassBlock.isStatic = true;
         // Instance all materials in every block
         var materials = GrassBlock.GetComponentInChildren<MeshRenderer>().sharedMaterials;
-        foreach (var m in materials) 
+        foreach (var m in materials)
         {
             m.enableInstancing = true;
         }
@@ -47,13 +52,12 @@ public class BlockContainer
         }
 
         // Attach Visibility Notifier
-        GrassBlock.AddComponent<VisibleBlocksTracker>();
-        GrassBlock.GetComponent<VisibleBlocksTracker>().visibleGameObjects = VisibleBlocks;
+        //GrassBlock.AddComponent<VisibleBlocksTracker>();
+        //GrassBlock.GetComponent<VisibleBlocksTracker>().visibleGameObjects = VisibleBlocks;
     }
 
     public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
     {
-        OBJLoader loader = new OBJLoader();
         switch (blockID) 
         {
             case BlockID.DIRT:
@@ -63,7 +67,7 @@ public class BlockContainer
                 BlockList.Add(GameObject.Instantiate(GrassBlock));
                 break;
         }
-
+        
         return BlockList[BlockList.Count - 1];
     }
 
