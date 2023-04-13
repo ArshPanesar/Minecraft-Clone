@@ -154,8 +154,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WorldLimitSize: 64000
-  ChunkSize: 64
-  ChunkLoadingWindowSize: 128
+  ChunkSize: 32
+  ChunkLoadingWindowSize: 96
   ChunkForceLoadingWindowSize: 32
   WorldSmoothingFactor: 150
   PlayerTransform: {fileID: 963194228}

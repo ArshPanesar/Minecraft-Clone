@@ -12,6 +12,40 @@ public class BlockContainer
         DIRT
     };
 
+    public class CreateBlocksTask : UnityMainThreadManager.Task
+    {
+        public int in_NumOfBlocks = 0;
+        public BlockID in_BlockID = BlockID.GRASS;
+        public BlockContainer inout_BlockContainerRef;
+
+        public override void Execute()
+        {
+            for (int i = 0; i < in_NumOfBlocks; ++i)
+            {
+                inout_BlockContainerRef.CreateBlock(in_BlockID);
+            }
+        }
+    }
+
+    public class PlaceBlocksTask : UnityMainThreadManager.Task
+    {
+        public BlockContainer inout_BlockContainerRef;
+        public List<Vector3Int> in_PosList;
+        public Grid in_UnityGrid;
+        public int in_StartIndex;
+        public int in_NumOfBlocks;
+
+        public override void Execute()
+        {
+            int j = 0;
+            for (int i = in_StartIndex; i < (in_StartIndex + in_NumOfBlocks); ++i)
+            {
+                var Block = inout_BlockContainerRef.BlockList[i];
+                Block.transform.position = in_UnityGrid.CellToWorld(in_PosList[j++]);
+            }
+        }
+    }
+
     public List<GameObject> BlockList;
     public int BlockIndex = 0;
 
@@ -50,15 +84,11 @@ public class BlockContainer
         {
             m.enableInstancing = true;
         }
-
-        // Attach Visibility Notifier
-        //GrassBlock.AddComponent<VisibleBlocksTracker>();
-        //GrassBlock.GetComponent<VisibleBlocksTracker>().visibleGameObjects = VisibleBlocks;
     }
 
     public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
     {
-        switch (blockID) 
+        switch (blockID)
         {
             case BlockID.DIRT:
                 BlockList.Add(GameObject.Instantiate(DirtBlock));
@@ -67,7 +97,7 @@ public class BlockContainer
                 BlockList.Add(GameObject.Instantiate(GrassBlock));
                 break;
         }
-        
+
         return BlockList[BlockList.Count - 1];
     }
 

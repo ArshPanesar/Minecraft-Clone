@@ -21,19 +21,17 @@ public class WorldData
 
     public class ManagedChunkData
     {
-        public static ConcurrentDictionary<int, BlockContainer> BlockContainerDict;
-        public static ConcurrentDictionary<int, int[,]> HeightMapDict;
-
-        private static ConcurrentQueue<int> IndexQueue;
+        public static Dictionary<int, BlockContainer> BlockContainerDict;
+        public static Dictionary<int, int[,]> HeightMapDict;
         
-        private static bool Initialized = false;
-
+        private static Queue<int> IndexQueue;
+        
         public static void Reset()
         {
-            BlockContainerDict = new ConcurrentDictionary<int, BlockContainer>();
-            HeightMapDict = new ConcurrentDictionary<int, int[,]>();
-
-            IndexQueue = new ConcurrentQueue<int>();
+            BlockContainerDict = new Dictionary<int, BlockContainer>();
+            HeightMapDict = new Dictionary<int, int[,]>();
+            
+            IndexQueue = new Queue<int>();
             for (int i = 0; i < 512; ++i)
             {
                 IndexQueue.Enqueue(i);
@@ -44,29 +42,27 @@ public class WorldData
         {
             int Index = -1;
 
-            // Keep Trying to get an Index
-            while (!IndexQueue.TryDequeue(out Index)) { };
+            lock (IndexQueue)
+            {
+                Index = IndexQueue.Dequeue();
+                
+                // Add Data
+                BlockContainer NewBlockContainer = new BlockContainer();
+                int[,] NewHeightMap = new int[ChunkSize, ChunkSize];
 
-            // Add Data
-            BlockContainer NewBlockContainer = new BlockContainer();
-            int[,] NewHeightMap = new int[ChunkSize, ChunkSize];
-
-            while (!BlockContainerDict.TryAdd(Index, NewBlockContainer)) { };
-            while (!HeightMapDict.TryAdd(Index, NewHeightMap)) { };
-
-            return Index;
+                lock (BlockContainerDict) { BlockContainerDict.Add(Index, NewBlockContainer); }
+                lock (HeightMapDict) { HeightMapDict.Add(Index, NewHeightMap); }
+                
+                return Index;
+            }
         }
 
         public static void DestroyData(int Index)
         {
-            // Remove Data
-            BlockContainer OldBlockContainer;
-            int[,] OldHeightMap;
-
-            while (!BlockContainerDict.TryRemove(Index, out OldBlockContainer)) { };
-            while (!HeightMapDict.TryRemove(Index, out OldHeightMap)) { };
-
-            IndexQueue.Enqueue(Index);
+            lock (BlockContainerDict) { BlockContainerDict.Remove(Index); }
+            lock (HeightMapDict) { HeightMapDict.Remove(Index); }
+            
+            lock (IndexQueue) { IndexQueue.Enqueue(Index); }
         }
     }
 
@@ -81,8 +77,7 @@ public class WorldData
         
         ActiveChunkSet = new HashSet<Vector2Int>();
         PlayerPosition = Vector3.zero;
-        //Debug.Log("Number of Chunks: " + NumOfChunks);
-
+        
         ManagedChunkData.Reset();
     }
 }

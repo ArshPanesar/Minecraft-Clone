@@ -42,11 +42,7 @@ public class TerrainGenerator : MonoBehaviour
     private NoiseGenerator.NoiseParameters NoiseParam;
     private Dictionary<Vector2Int, Chunk> ChunkMap;
 
-    //private HashSet<Vector2Int> ActiveChunksInCurrTick;
-    private HashSet<Vector2Int> ActiveChunksInPrevTick;
-
-    private int MaxNativeChunks = 32;
-    private int CurrentNativeChunk = 0;
+    private int MaxNativeChunks = 16;
     private Dictionary<Vector2Int, ChunkJobHandle> ChunkGenJobHandleMap;
     
     // Indirect References for Chunk Generation Job
@@ -91,9 +87,7 @@ public class TerrainGenerator : MonoBehaviour
         UnityGrid = GetComponent<Grid>();
         
         ChunkMap = new Dictionary<Vector2Int, Chunk>();
-        //ActiveChunksInCurrTick = new HashSet<Vector2Int>();
-        ActiveChunksInPrevTick = new HashSet<Vector2Int>();
-
+        
         if (ChunkForceLoadingWindowSize >= ChunkLoadingWindowSize)
         {
             ChunkForceLoadingWindowSize = ChunkLoadingWindowSize / 2;
@@ -115,9 +109,12 @@ public class TerrainGenerator : MonoBehaviour
     {
         GenerateTerrain();
     }
-    static readonly ProfilerMarker s_ProfMarker = new ProfilerMarker("Chunk.PlaceBlocks()");
+
     public void GenerateTerrain()
     {
+        // Run Any Necessary Tasks
+        UnityMainThreadManager.GetInstance().Update();
+
         // Getting Loader Window
         WorldData.PlayerPosition = PlayerTransform.position;
         Vector2Int LoaderWindowStart = new Vector2Int(Mathf.FloorToInt(WorldData.PlayerPosition.x - ChunkLoadingWindowSize),
@@ -137,8 +134,10 @@ public class TerrainGenerator : MonoBehaviour
             {
                 CurrentChunkPosition.x = j;
                 CurrentChunkPosition.y = i;
+                //Debug.Log(ChunkGenJobHandleMap.Count+ ", " + MaxNativeChunks);
                 if (!WorldData.ActiveChunkSet.Contains(CurrentChunkPosition) &&
-                    !ChunkGenJobHandleMap.ContainsKey(CurrentChunkPosition))
+                    !ChunkGenJobHandleMap.ContainsKey(CurrentChunkPosition) &&
+                    ChunkGenJobHandleMap.Count < MaxNativeChunks)
                 {
                     // Creating a New Job
                     GenerateChunkJob Job = new GenerateChunkJob();
@@ -154,21 +153,6 @@ public class TerrainGenerator : MonoBehaviour
                     NewHandle.Handle = Job.Schedule();
                     ChunkGenJobHandleMap.Add(CurrentChunkPosition, NewHandle);
 
-                    //++CurrentNativeChunk;
-
-                    /*Chunk NewChunk = new Chunk();
-                    
-                    NewChunk.Generate(CurrentChunkPosition * WorldData.ChunkSize, NoiseParam);
-
-                    //s_ProfMarker.Begin();
-
-                    NewChunk.PlaceBlocks(UnityGrid);
-
-                    //s_ProfMarker.End();
-
-                    ChunkMap.Add(CurrentChunkPosition, NewChunk);
-                    WorldData.ActiveChunkSet.Add(CurrentChunkPosition);*/
-
                     ++NumOfChunks;
                 }
             }
@@ -178,6 +162,11 @@ public class TerrainGenerator : MonoBehaviour
                                                       Mathf.FloorToInt(WorldData.PlayerPosition.z - ChunkForceLoadingWindowSize));
         Vector2Int ForceLoaderWindowEnd = new Vector2Int(Mathf.FloorToInt(WorldData.PlayerPosition.x + ChunkForceLoadingWindowSize),
                                                     Mathf.FloorToInt(WorldData.PlayerPosition.z + ChunkForceLoadingWindowSize));
+
+        // Normalizing Window Size to Chunk Size
+        ForceLoaderWindowStart /= WorldData.ChunkSize;
+        ForceLoaderWindowEnd /= WorldData.ChunkSize;
+
         for (int i = ForceLoaderWindowStart.y; i < ForceLoaderWindowEnd.y; ++i)
         {
             for (int j = ForceLoaderWindowStart.x; j < ForceLoaderWindowEnd.x; ++j)
@@ -190,36 +179,44 @@ public class TerrainGenerator : MonoBehaviour
                 {
                     // Force Load this Chunk
                     ChunkJobHandle JobHandle = ChunkGenJobHandleMap[CurrentChunkPosition];
-                    JobHandle.Handle.Complete();
+                    
+                    if (JobHandle.Handle.IsCompleted)
+                    {
+                        JobHandle.Handle.Complete();
 
-                    Chunk NewChunk = JobHandle.NativeArrRef[0];
+                        // Set it as Active
+                        ChunkMap.Add(CurrentChunkPosition, JobHandle.NativeArrRef[0]);
+                        WorldData.ActiveChunkSet.Add(CurrentChunkPosition);
 
-                    // Set it as Active
-                    ChunkMap.Add(CurrentChunkPosition, NewChunk);
-                    WorldData.ActiveChunkSet.Add(CurrentChunkPosition);
-
-                    JobHandle.NativeArrRef.Dispose();
-                    ChunkGenJobHandleMap.Remove(CurrentChunkPosition);
+                        JobHandle.NativeArrRef.Dispose();
+                        ChunkGenJobHandleMap.Remove(CurrentChunkPosition);
+                    }
                 }
 
             }
         }
 
-        if (NumOfChunks != 0)
-        {
-            Debug.Log(NumOfChunks);
-        }
-
         // Destroy Chunks Out of Window
-        ActiveChunksInPrevTick.ExceptWith(WorldData.ActiveChunkSet);
-        foreach (var OldChunkPosition in ActiveChunksInPrevTick)
+        string msg = "Removed: ";
+        int Removed = 0;
+        HashSet<Vector2Int> CurrentChunkSet = new HashSet<Vector2Int>(WorldData.ActiveChunkSet);
+        foreach (var OldChunkPosition in CurrentChunkSet)
         {
-            ChunkUtility.Destroy(ChunkMap[OldChunkPosition]);
+            if (OldChunkPosition.x < LoaderWindowStart.x || OldChunkPosition.x > LoaderWindowEnd.x
+                || OldChunkPosition.y < LoaderWindowStart.y || OldChunkPosition.y > LoaderWindowEnd.y)
+            {
+                Chunk OldChunk = ChunkMap[OldChunkPosition];
+                ChunkUtility.Destroy(ref OldChunk);
+                ChunkMap.Remove(OldChunkPosition);
+                WorldData.ActiveChunkSet.Remove(OldChunkPosition);
 
-            ChunkMap.Remove(OldChunkPosition);
-            WorldData.ActiveChunkSet.Remove(OldChunkPosition);
+                msg += OldChunkPosition + " | ";
+                ++Removed;
+            }
         }
-
-        ActiveChunksInPrevTick = new HashSet<Vector2Int>(WorldData.ActiveChunkSet);
+        if (Removed > 0)
+        {
+            Debug.Log(msg);
+        }
     }
 }

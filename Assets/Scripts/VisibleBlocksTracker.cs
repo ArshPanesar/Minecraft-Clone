@@ -8,14 +8,14 @@ public class VisibleBlocksTracker : MonoBehaviour
 
     VisibleBlocksTracker()
     {
-        //visibleGameObjects = new HashSet<GameObject>();
+
     }
 
     private void Start()
     {
         if (visibleGameObjects == null)
         {
-            //Debug.Log("VisibleBlocksTracker: visibleGameObjects is null.");
+
         }
     }
 
@@ -24,7 +24,6 @@ public class VisibleBlocksTracker : MonoBehaviour
         if (visibleGameObjects != null)
         {
             visibleGameObjects.Add(gameObject);
-            //Debug.Log(visibleGameObjects.Count);
         }
     }
 
@@ -33,15 +32,6 @@ public class VisibleBlocksTracker : MonoBehaviour
         if (visibleGameObjects != null)
         {
             visibleGameObjects.Remove(gameObject);
-            //Debug.Log(visibleGameObjects.Count);
         }
     }
-
-    /*public GameObject[] GetVisibleBlocks()
-    {
-        GameObject[] gameObjects = new GameObject[visibleGameObjects.Count];
-        visibleGameObjects.CopyTo(gameObjects, 0);
-
-        return gameObjects;
-    }*/
 }
