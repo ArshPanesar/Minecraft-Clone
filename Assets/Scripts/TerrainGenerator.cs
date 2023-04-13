@@ -98,7 +98,7 @@ public class TerrainGenerator : MonoBehaviour
         // Normalizing Window Size to Chunk Size
         LoaderWindowStart /= WorldData.ChunkSize;
         LoaderWindowEnd /= WorldData.ChunkSize;
-
+        int Count = 0;
         Vector2Int CurrentChunkPosition = new Vector2Int();
         for (int i = LoaderWindowStart.y; i < LoaderWindowEnd.y; ++i)
         {
@@ -114,20 +114,29 @@ public class TerrainGenerator : MonoBehaviour
 
                     ChunkMap.Add(CurrentChunkPosition, NewChunk);
                     WorldData.ActiveChunkSet.Add(CurrentChunkPosition);
+
+                    ++Count;
                 }
             }
         }
 
+        //if (Count != 0)
+        //{
+        //    Debug.Log(Count);
+        //}
+
         // Destroy Chunks Out of Window
-        ActiveChunksInPrevTick.ExceptWith(WorldData.ActiveChunkSet);
-        foreach (var OldChunkPosition in ActiveChunksInPrevTick)
+        HashSet<Vector2Int> CurrentChunkSet = new HashSet<Vector2Int>(WorldData.ActiveChunkSet);
+        foreach (var OldChunkPosition in CurrentChunkSet)
         {
-            ChunkMap[OldChunkPosition].Destroy();
+            if (OldChunkPosition.x < LoaderWindowStart.x || OldChunkPosition.x > LoaderWindowEnd.x
+                || OldChunkPosition.y < LoaderWindowStart.y || OldChunkPosition.y > LoaderWindowEnd.y)
+            {
+                ChunkMap[OldChunkPosition].Destroy();
 
-            ChunkMap.Remove(OldChunkPosition);
-            WorldData.ActiveChunkSet.Remove(OldChunkPosition);
+                ChunkMap.Remove(OldChunkPosition);
+                WorldData.ActiveChunkSet.Remove(OldChunkPosition);
+            }
         }
-
-        ActiveChunksInPrevTick = new HashSet<Vector2Int>(WorldData.ActiveChunkSet);
     }
 }

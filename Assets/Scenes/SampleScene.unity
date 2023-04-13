@@ -156,7 +156,7 @@ MonoBehaviour:
   WorldLimitSize: 64000
   ChunkSize: 32
   ChunkLoadingWindowSize: 96
-  WorldSmoothingFactor: 150
+  WorldSmoothingFactor: 200
   PlayerTransform: {fileID: 963194228}
   NoiseScale: 3.5
   Octaves: 3
