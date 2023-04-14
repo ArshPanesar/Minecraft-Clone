@@ -88,6 +88,9 @@ public class TerrainGenerator : MonoBehaviour
 
     public void GenerateTerrain()
     {
+        // Complete Tasks
+        TaskManager.GetInstance().Update();
+
         // Getting Loader Window
         WorldData.PlayerPosition = PlayerTransform.position;
         Vector2Int LoaderWindowStart = new Vector2Int(Mathf.FloorToInt(WorldData.PlayerPosition.x - ChunkLoadingWindowSize),
@@ -109,8 +112,14 @@ public class TerrainGenerator : MonoBehaviour
                 if (!WorldData.ActiveChunkSet.Contains(CurrentChunkPosition))
                 {
                     Chunk NewChunk = new Chunk();
-                    NewChunk.Generate(CurrentChunkPosition * WorldData.ChunkSize, NoiseParam);
-                    NewChunk.PlaceBlocks(UnityGrid);
+                    
+                    Chunk.GenerateChunkTask NewTask = new Chunk.GenerateChunkTask();
+                    NewTask.in_StartPosition = CurrentChunkPosition * WorldData.ChunkSize;
+                    NewTask.inout_ChunkRef = NewChunk;
+                    NewTask.in_NoiseParam = NoiseParam;
+                    NewTask.in_UnityGrid = UnityGrid;
+
+                    TaskManager.GetInstance().Enqueue(NewTask);
 
                     ChunkMap.Add(CurrentChunkPosition, NewChunk);
                     WorldData.ActiveChunkSet.Add(CurrentChunkPosition);
@@ -120,11 +129,6 @@ public class TerrainGenerator : MonoBehaviour
             }
         }
 
-        //if (Count != 0)
-        //{
-        //    Debug.Log(Count);
-        //}
-
         // Destroy Chunks Out of Window
         HashSet<Vector2Int> CurrentChunkSet = new HashSet<Vector2Int>(WorldData.ActiveChunkSet);
         foreach (var OldChunkPosition in CurrentChunkSet)
@@ -132,10 +136,13 @@ public class TerrainGenerator : MonoBehaviour
             if (OldChunkPosition.x < LoaderWindowStart.x || OldChunkPosition.x > LoaderWindowEnd.x
                 || OldChunkPosition.y < LoaderWindowStart.y || OldChunkPosition.y > LoaderWindowEnd.y)
             {
-                ChunkMap[OldChunkPosition].Destroy();
-
-                ChunkMap.Remove(OldChunkPosition);
-                WorldData.ActiveChunkSet.Remove(OldChunkPosition);
+                if (ChunkMap[OldChunkPosition].IsActive)
+                {
+                    ChunkMap[OldChunkPosition].Destroy();
+                    
+                    ChunkMap.Remove(OldChunkPosition);
+                    WorldData.ActiveChunkSet.Remove(OldChunkPosition);
+                }
             }
         }
     }

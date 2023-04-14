@@ -18,17 +18,13 @@ public class BlockContainer
     public GameObject GrassBlock;
     public GameObject DirtBlock;
 
-    public HashSet<GameObject> VisibleBlocks;
-
     public BlockContainer()
     {
-        BlockList = new List<GameObject>();
+        BlockList = new List<GameObject>(WorldData.ChunkSize * WorldData.ChunkSize);
         GrassBlock = new OBJLoader().Load("Assets/Resources/Models/GrassBlock.obj");
         DirtBlock = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
         GrassBlock = GrassBlock.transform.GetChild(0).gameObject;
         DirtBlock = DirtBlock.transform.GetChild(0).gameObject;
-
-        VisibleBlocks = new HashSet<GameObject>();
 
         // Set Up the GrassBlock
         //
@@ -45,10 +41,6 @@ public class BlockContainer
         {
             m.enableInstancing = true;
         }
-
-        // Attach Visibility Notifier
-        GrassBlock.AddComponent<VisibleBlocksTracker>();
-        GrassBlock.GetComponent<VisibleBlocksTracker>().visibleGameObjects = VisibleBlocks;
     }
 
     public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
@@ -76,6 +68,10 @@ public class BlockContainer
 
     public void ClearAll()
     {
+        for (int i = 0; i < BlockList.Count; ++i)
+        {
+            GameObject.Destroy(BlockList[i]);
+        }
         BlockList.Clear();
     }
 
@@ -88,10 +84,5 @@ public class BlockContainer
         }
         
         StaticBatchingUtility.Combine(gameObjects, BlockList[0]);
-    }
-
-    public void PrintVisible()
-    {
-        Debug.Log(VisibleBlocks.Count);
     }
 }

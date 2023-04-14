@@ -29,6 +29,5 @@ public class WorldData
         
         ActiveChunkSet = new HashSet<Vector2Int>();
         PlayerPosition = Vector3.zero;
-        //Debug.Log("Number of Chunks: " + NumOfChunks);
     }
 }
