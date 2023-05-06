@@ -52,6 +52,9 @@ public class FreeCam : MonoBehaviour
     // Fog
     public bool fog = true;
 
+    // Debug Panel
+    public GameObject debugMenuPanel = null;
+
     void Update()
     {
         var fastMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
@@ -150,5 +153,13 @@ public class FreeCam : MonoBehaviour
     {
         fog = !fog;
         RenderSettings.fog = fog;
+    }
+
+    public void ToggleDebugMenu()
+    {
+        if (debugMenuPanel != null)
+        {
+            debugMenuPanel.SetActive(!debugMenuPanel.activeInHierarchy);
+        }
     }
 }

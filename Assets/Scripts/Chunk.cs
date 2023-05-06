@@ -20,6 +20,37 @@ public class Chunk
     private Vector2Int Position;
     private BlockContainer BlockContainer;
 
+    public int GetBlockHeight(Vector2Int GlobalBlockPosition)
+    {
+        float x = (float)GlobalBlockPosition.x / (float)WorldData.WorldSmoothingFactor * WorldData.TerrainNoiseParam.NoiseScale;
+        float y = (float)GlobalBlockPosition.y / (float)WorldData.WorldSmoothingFactor * WorldData.TerrainNoiseParam.NoiseScale;
+        
+        float noise = NoiseGenerator.FractalBrownianMotion(x, y, WorldData.TerrainNoiseParam);
+        noise = Mathf.Clamp(noise, -0.5f, 0.5f);
+
+        // Scaling Height from [-1, 1] Range
+        int height = (int)(((noise + 0.5f) / (0.5f - (-0.5f))) * ((float)WorldData.MaxHeight - (float)WorldData.MinHeight) + (float)WorldData.MinHeight);
+
+        if (height < 20)
+        {
+            height = 20;
+        }
+        else if (height < 25)
+        {
+            height = 21;
+        }
+        else if (height < 30)
+        {
+            height = 22;
+        }
+        else
+        {
+            height -= 7;
+        }
+
+        return height;
+    }
+
     public Chunk()
     {
         IsActive = false;
@@ -29,10 +60,9 @@ public class Chunk
         BlockContainer = new BlockContainer();
     }
 
-    public void Generate(Vector2Int StartPosition, NoiseGenerator.NoiseParameters NoiseParam)
+    public void Generate(Vector2Int StartPosition)
     {
         Position = StartPosition;
-
         Vector2Int EndPosition = StartPosition + (new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
         
         int hx = 0, hy = 0;
@@ -40,31 +70,7 @@ public class Chunk
         {
             for (int j = StartPosition.x; j < EndPosition.x; ++j)
             {
-                float y = (float)i / (float)WorldData.WorldSmoothingFactor * NoiseParam.NoiseScale;
-                float x = (float)j / (float)WorldData.WorldSmoothingFactor * NoiseParam.NoiseScale;
-
-                float noise = NoiseGenerator.FractalBrownianMotion(x, y, NoiseParam);
-                noise = Mathf.Clamp(noise, -0.5f, 0.5f);
-
-                // Scaling Height from [-1, 1] Range
-                int height = (int)( ( (noise + 0.5f) / (0.5f - (-0.5f)) ) * ((float)WorldData.MaxHeight - (float)WorldData.MinHeight) + (float)WorldData.MinHeight );
-                
-                if (height < 20)
-                {
-                    height = 20;
-                }
-                else if (height < 25)
-                {
-                    height = 21;
-                }
-                else if (height < 30)
-                {
-                    height = 22;
-                }
-                else
-                {
-                    height -= 7;
-                }
+                int height = GetBlockHeight(new Vector2Int(j, i));
 
                 HeightMap[hx, hy] = height;
                 ++hx;
@@ -90,12 +96,11 @@ public class Chunk
     public class GenerateHeightMapTask : TaskManager.Task
     {
         public Vector2Int in_StartPos;
-        public NoiseGenerator.NoiseParameters in_NoiseParam;
         public Chunk inout_ChunkRef;
 
         public override void Execute()
         {
-            inout_ChunkRef.Generate(in_StartPos, in_NoiseParam);
+            inout_ChunkRef.Generate(in_StartPos);
         }
     }
 
@@ -106,87 +111,38 @@ public class Chunk
         public Grid in_UnityGrid;
         public Chunk inout_ChunkRef;
         public List<Vector3Int> inout_HighCellList;
+        public List<int> inout_DepthList;
 
         private bool IsHighCell(int x, int y)
         {
             int[,] HMap = inout_ChunkRef.HeightMap;
             int Height = HMap[x, y];
 
-            List<Vector2Int> Neighbours = new List<Vector2Int>(8);
+            List<int> NeighbourHeightList = new List<int>(8);
 
-            bool IsEdgeBlock = false;
+            Vector2Int ChunkGlobalPosition = inout_ChunkRef.Position;
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x, y + 1))));
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x, y - 1))));
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x - 1, y))));
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x + 1, y))));
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x - 1, y + 1))));       
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x - 1, y - 1))));           
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x + 1, y - 1))));           
+            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x + 1, y + 1))));
 
-            // Check North
-            if (y + 1 < WorldData.ChunkSize)
+            bool IsHigh = false;
+            int MaxFillDepth = 0;
+            for (int i = 0; i < NeighbourHeightList.Count; ++i)
             {
-                Neighbours.Add(new Vector2Int(x, y + 1));
-            } 
-            else { IsEdgeBlock = true; }
-            
-            // Check North-East
-            if (x + 1 < WorldData.ChunkSize && y + 1 < WorldData.ChunkSize)
-            {
-                Neighbours.Add(new Vector2Int(x + 1, y + 1));
-            }
-            else { IsEdgeBlock = true; }
-            
-            // Check East
-            if (x + 1 < WorldData.ChunkSize)
-            {
-                Neighbours.Add(new Vector2Int(x + 1, y));
-            }
-            else { IsEdgeBlock = true; }
-            
-            // Check South-East
-            if (x + 1 < WorldData.ChunkSize && y - 1 > -1)
-            {
-                Neighbours.Add(new Vector2Int(x + 1, y - 1));
-            }
-            else { IsEdgeBlock = true; }
-
-            // Check South
-            if (y - 1 > -1)
-            {
-                Neighbours.Add(new Vector2Int(x, y - 1));
-            }
-            else { IsEdgeBlock = true; }
-
-            // Check South-West
-            if (x - 1 > -1 && y - 1 > -1)
-            {
-                Neighbours.Add(new Vector2Int(x - 1, y - 1));
-            }
-            else { IsEdgeBlock = true; }
-
-            // Check West
-            if (x - 1 > -1)
-            {
-                Neighbours.Add(new Vector2Int(x - 1, y));
-            }
-            else { IsEdgeBlock = true; }
-
-            // Check North-West
-            if (x - 1 > -1 && y + 1 < WorldData.ChunkSize)
-            {
-                Neighbours.Add(new Vector2Int(x - 1, y + 1));
-            }
-            else { IsEdgeBlock = true; }
-
-            // Since we can't see the Chunks Neighbouring us, we fill all edge blocks
-            if (IsEdgeBlock)
-            {
-                return true;
-            }
-
-            for (int i = 0; i < Neighbours.Count; ++i)
-            {
-                if (HMap[Neighbours[i].x, Neighbours[i].y] < Height - 1)
+                if (NeighbourHeightList[i] < Height - 1)
                 {
-                    return true;
+                    MaxFillDepth = Mathf.Max(MaxFillDepth, Mathf.Abs(Height - NeighbourHeightList[i]));
+                    IsHigh = true;
                 }
             }
 
-            return false;
+            if (IsHigh) { inout_DepthList.Add(MaxFillDepth); }
+            return IsHigh;
         }
 
         public override void Execute()
@@ -220,6 +176,7 @@ public class Chunk
         public int in_StartIndex;
         public int in_Size;
         public List<Vector3Int> in_HighCellBlocks;
+        public List<int> in_DepthList;
         public Chunk inout_ChunkRef;
         public Grid in_UnityGrid;
 
@@ -230,7 +187,8 @@ public class Chunk
             for (int c = in_StartIndex; c < (in_StartIndex + in_Size); ++c)
             {
                 Vector3Int cell = in_HighCellBlocks[c];
-                for (int i = cell.y - Chunk.FillerBlocksDepth; i < cell.y; ++i)
+                int FillDepth = in_DepthList[c];
+                for (int i = cell.y - FillDepth; i < cell.y; ++i)
                 {
                     var block = BlockContainerRef.CreateBlock(BlockContainer.BlockID.DIRT);
                     block.transform.position = in_UnityGrid.CellToWorld(new Vector3Int(cell.x, i, cell.z));
@@ -246,8 +204,10 @@ public class Chunk
 
         private List<PlaceGrassBlocksTask> PlaceBlocksTaskList = new List<PlaceGrassBlocksTask>();
         private List<Vector3Int> HighCellList = new List<Vector3Int>();
+        private List<int> FillDepthList = new List<int>();
+        
         private List<FillEmptyBlocksTask> FillEmptyTaskList = new List<FillEmptyBlocksTask>();
-
+        
         private bool CreatedPlaceGrassBlockTasks = false;
         private bool CreatedPlaceFillerBlockTasks = false;
 
@@ -272,6 +232,7 @@ public class Chunk
                 PlaceGrassBlocksTask NewTask = PlaceBlocksTaskList[PlaceBlocksTaskList.Count - 1];
                 NewTask.in_UnityGrid = in_UnityGrid;
                 NewTask.inout_HighCellList = HighCellList;
+                NewTask.inout_DepthList = FillDepthList;
                 NewTask.inout_ChunkRef = inout_ChunkRef;
                 NewTask.in_StartPos = new Vector2Int(StartX, StartY);
                 NewTask.in_SizeToFill = PlacePartialChunkPerTask;
@@ -296,6 +257,7 @@ public class Chunk
                 FillEmptyBlocksTask NewTask = FillEmptyTaskList[FillEmptyTaskList.Count - 1];
                 NewTask.in_UnityGrid = in_UnityGrid;
                 NewTask.in_HighCellBlocks = HighCellList;
+                NewTask.in_DepthList = FillDepthList;
                 NewTask.inout_ChunkRef = inout_ChunkRef;
                 NewTask.in_StartIndex = StartIndex;
                 NewTask.in_Size = Size;
@@ -368,8 +330,7 @@ public class Chunk
                 GenMapTask = new GenerateHeightMapTask();
                 GenMapTask.inout_ChunkRef = inout_ChunkRef;
                 GenMapTask.in_StartPos = in_StartPosition;
-                GenMapTask.in_NoiseParam = in_NoiseParam;
-
+                
                 TaskManager.GetInstance().Enqueue(GenMapTask);
 
                 CreatedGenerateTask = true;

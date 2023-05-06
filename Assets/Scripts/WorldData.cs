@@ -14,7 +14,9 @@ public class WorldData
 
     public static int MapToWorldScaleFactor = 1;
 
-    public static HashSet<Vector2Int> ActiveChunkSet;
+    public static Dictionary<Vector2Int, Chunk> ChunkMap;
+
+    public static NoiseGenerator.NoiseParameters TerrainNoiseParam;
 
     public static Vector3 PlayerPosition;
 
@@ -27,7 +29,10 @@ public class WorldData
     {
         NumOfChunks = WorldSize / ChunkSize;
         
-        ActiveChunkSet = new HashSet<Vector2Int>();
+        ChunkMap = new Dictionary<Vector2Int, Chunk>();
+
+        TerrainNoiseParam = new NoiseGenerator.NoiseParameters();
+
         PlayerPosition = Vector3.zero;
     }
 }

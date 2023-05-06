@@ -36,9 +36,7 @@ public class TerrainGenerator : MonoBehaviour
 
     // World Data
     private Grid UnityGrid;
-    private NoiseGenerator.NoiseParameters NoiseParam;
-    private Dictionary<Vector2Int, Chunk> ChunkMap;
-
+    
     //private HashSet<Vector2Int> ActiveChunksInCurrTick;
     private HashSet<Vector2Int> ActiveChunksInPrevTick;
 
@@ -64,18 +62,17 @@ public class TerrainGenerator : MonoBehaviour
 
         WorldData.Evaluate();
 
-        NoiseParam = new NoiseGenerator.NoiseParameters();
-        NoiseParam.NoiseScale = NoiseScale;
-        NoiseParam.Octaves = Octaves;
-        NoiseParam.Amplitude = Amplitude;
-        NoiseParam.AmplitudeGain = AmplitudeGain;
-        NoiseParam.Freq = Freq;
-        NoiseParam.FreqGain = FreqGain;
-        NoiseParam.PerlinShift = PerlinShift;
-        NoiseParam.PerlinShiftGain = PerlinShiftGain;
+        WorldData.TerrainNoiseParam = new NoiseGenerator.NoiseParameters();
+        WorldData.TerrainNoiseParam.NoiseScale = NoiseScale;
+        WorldData.TerrainNoiseParam.Octaves = Octaves;
+        WorldData.TerrainNoiseParam.Amplitude = Amplitude;
+        WorldData.TerrainNoiseParam.AmplitudeGain = AmplitudeGain;
+        WorldData.TerrainNoiseParam.Freq = Freq;
+        WorldData.TerrainNoiseParam.FreqGain = FreqGain;
+        WorldData.TerrainNoiseParam.PerlinShift = PerlinShift;
+        WorldData.TerrainNoiseParam.PerlinShiftGain = PerlinShiftGain;
 
         UnityGrid = GetComponent<Grid>();
-        ChunkMap = new Dictionary<Vector2Int, Chunk>();
         //ActiveChunksInCurrTick = new HashSet<Vector2Int>();
         ActiveChunksInPrevTick = new HashSet<Vector2Int>();
     }
@@ -101,49 +98,59 @@ public class TerrainGenerator : MonoBehaviour
         // Normalizing Window Size to Chunk Size
         LoaderWindowStart /= WorldData.ChunkSize;
         LoaderWindowEnd /= WorldData.ChunkSize;
+        
+        
         int Count = 0;
         Vector2Int CurrentChunkPosition = new Vector2Int();
+        List<Chunk.GenerateChunkTask> ChunkTaskList = new List<Chunk.GenerateChunkTask>(8);
         for (int i = LoaderWindowStart.y; i < LoaderWindowEnd.y; ++i)
         {
             for (int j = LoaderWindowStart.x; j < LoaderWindowEnd.x; ++j)
             {
                 CurrentChunkPosition.x = j;
                 CurrentChunkPosition.y = i;
-                if (!WorldData.ActiveChunkSet.Contains(CurrentChunkPosition))
+                if (!WorldData.ChunkMap.ContainsKey(CurrentChunkPosition))
                 {
                     Chunk NewChunk = new Chunk();
                     
                     Chunk.GenerateChunkTask NewTask = new Chunk.GenerateChunkTask();
                     NewTask.in_StartPosition = CurrentChunkPosition * WorldData.ChunkSize;
                     NewTask.inout_ChunkRef = NewChunk;
-                    NewTask.in_NoiseParam = NoiseParam;
                     NewTask.in_UnityGrid = UnityGrid;
 
-                    TaskManager.GetInstance().Enqueue(NewTask);
+                    ChunkTaskList.Add(NewTask);
+                    //TaskManager.GetInstance().Enqueue(NewTask);
 
-                    ChunkMap.Add(CurrentChunkPosition, NewChunk);
-                    WorldData.ActiveChunkSet.Add(CurrentChunkPosition);
-
+                    WorldData.ChunkMap.Add(CurrentChunkPosition, NewChunk);
+                    
                     ++Count;
                 }
             }
         }
 
+        for (int i = 0; i < ChunkTaskList.Count; ++i)
+        {
+            TaskManager.GetInstance().Enqueue(ChunkTaskList[i]);
+        }
+
         // Destroy Chunks Out of Window
-        HashSet<Vector2Int> CurrentChunkSet = new HashSet<Vector2Int>(WorldData.ActiveChunkSet);
-        foreach (var OldChunkPosition in CurrentChunkSet)
+        List<Vector2Int> RemoveChunkList = new List<Vector2Int>(WorldData.ChunkMap.Keys.Count);
+        foreach (var OldChunkPosition in WorldData.ChunkMap.Keys)
         {
             if (OldChunkPosition.x < LoaderWindowStart.x || OldChunkPosition.x > LoaderWindowEnd.x
                 || OldChunkPosition.y < LoaderWindowStart.y || OldChunkPosition.y > LoaderWindowEnd.y)
             {
-                if (ChunkMap[OldChunkPosition].IsActive)
+                if (WorldData.ChunkMap[OldChunkPosition].IsActive)
                 {
-                    ChunkMap[OldChunkPosition].Destroy();
-                    
-                    ChunkMap.Remove(OldChunkPosition);
-                    WorldData.ActiveChunkSet.Remove(OldChunkPosition);
+                    WorldData.ChunkMap[OldChunkPosition].Destroy();
+
+                    RemoveChunkList.Add(OldChunkPosition);
                 }
             }
+        }
+        foreach (var Pos in RemoveChunkList)
+        {
+            WorldData.ChunkMap.Remove(Pos);
         }
     }
 }
