@@ -4,6 +4,10 @@ This Project contains Minecraft's Terrain Generation made using the Unity Game E
 A Demo is provided below which includes a Debug Menu to change Terrain Generation Parameters at Run-Time. There is also a Section in this ReadMe which gives a description about the Debug Menu and its Options. 
 ### [Play The Demo Here!](https://arsh-panesar.itch.io/minecraft-clone)
 
+Use WASD to Move Around.
+Hold Right-Click and Move Mouse to Rotate.
+Hold Shift to Move Faster.
+
 ## Preview
 
 ![Pic](https://user-images.githubusercontent.com/43693790/236690216-e9dfee96-9ec9-427c-ae28-34fcf8affdeb.png)
