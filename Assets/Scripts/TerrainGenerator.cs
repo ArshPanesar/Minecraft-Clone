@@ -153,4 +153,14 @@ public class TerrainGenerator : MonoBehaviour
             WorldData.ChunkMap.Remove(Pos);
         }
     }
+
+    public void RemoveAllChunks()
+    {
+        // Delete All Chunks
+        foreach (var Chunk in WorldData.ChunkMap.Values)
+        {
+            Chunk.Destroy();
+        }
+        WorldData.ChunkMap.Clear();
+    }
 }
