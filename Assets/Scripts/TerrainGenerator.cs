@@ -36,13 +36,22 @@ public class TerrainGenerator : MonoBehaviour
 
     // World Data
     private Grid UnityGrid;
-    
-    //private HashSet<Vector2Int> ActiveChunksInCurrTick;
     private HashSet<Vector2Int> ActiveChunksInPrevTick;
+
+    // GameObjects of Blocks
+    public GameObject GrassBlock;
+    public GameObject DirtBlock;
 
     // Start is called before the first frame update
     void Start()
     {
+        // Set Block Data
+        GrassBlock = GrassBlock.transform.GetChild(0).gameObject;
+        DirtBlock = DirtBlock.transform.GetChild(0).gameObject;
+        BlockContainer.DirtBlock = DirtBlock;
+        BlockContainer.GrassBlock = GrassBlock;
+
+        // Set World Data
         WorldData.WorldSize = WorldLimitSize;
         WorldData.ChunkSize = ChunkSize;
         WorldData.MinHeight = MinHeight;

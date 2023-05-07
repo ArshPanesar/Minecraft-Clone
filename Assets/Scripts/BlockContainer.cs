@@ -15,21 +15,22 @@ public class BlockContainer
     public List<GameObject> BlockList;
     public int BlockIndex = 0;
 
-    public GameObject GrassBlock;
-    public GameObject DirtBlock;
+    static public GameObject GrassBlock;
+    static public GameObject DirtBlock;
 
     public BlockContainer()
     {
         BlockList = new List<GameObject>(WorldData.ChunkSize * WorldData.ChunkSize);
-        GrassBlock = new OBJLoader().Load("Assets/Resources/Models/GrassBlock.obj");
+        /*GrassBlock = new OBJLoader().Load("Assets/Resources/Models/GrassBlock.obj");
         DirtBlock = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
-        GrassBlock = GrassBlock.transform.GetChild(0).gameObject;
-        DirtBlock = DirtBlock.transform.GetChild(0).gameObject;
-
-        // Set Up the GrassBlock
+        GrassBlock = GrassBlock.gameObject.transform.GetChild(0).gameObject;
+        DirtBlock = DirtBlock.gameObject.transform.GetChild(0).gameObject;*/
+        
+        // Set Up the Blocks
         //
         // Block will never move
         GrassBlock.isStatic = true;
+        DirtBlock.isStatic = true;
         // Instance all materials in every block
         var materials = GrassBlock.GetComponentInChildren<MeshRenderer>().sharedMaterials;
         foreach (var m in materials) 
