@@ -6,7 +6,6 @@ public class TerrainGenerator : MonoBehaviour
 {
     // Terrain Parameters
     //
-    public int WorldLimitSize = 64000;
     // A Chunk is will group together a number of block ~ makes it easy to create and destroy on the fly
     public int ChunkSize = 32;
     // A Window of this Size is created around the player to know which chunks need to be loaded/unloaded
@@ -52,7 +51,6 @@ public class TerrainGenerator : MonoBehaviour
         BlockContainer.GrassBlock = GrassBlock;
 
         // Set World Data
-        WorldData.WorldSize = WorldLimitSize;
         WorldData.ChunkSize = ChunkSize;
         WorldData.MinHeight = MinHeight;
         WorldData.MaxHeight = MaxHeight;
@@ -86,7 +84,6 @@ public class TerrainGenerator : MonoBehaviour
         ActiveChunksInPrevTick = new HashSet<Vector2Int>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         GenerateTerrain();
