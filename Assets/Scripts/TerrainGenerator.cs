@@ -82,6 +82,8 @@ public class TerrainGenerator : MonoBehaviour
         UnityGrid = GetComponent<Grid>();
         //ActiveChunksInCurrTick = new HashSet<Vector2Int>();
         ActiveChunksInPrevTick = new HashSet<Vector2Int>();
+
+        Debug.Log("GPU Device: " + SystemInfo.graphicsDeviceName);
     }
 
     void Update()
