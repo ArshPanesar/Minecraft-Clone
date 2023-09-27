@@ -20,8 +20,22 @@ public class Chunk
     private Vector2Int Position;
     private BlockContainer BlockContainer;
 
-    public int GetBlockHeight(Vector2Int GlobalBlockPosition)
+    public int GetBlockHeight(Vector2Int GlobalBlockPosition, bool tryLookUpHeightMap = false)
     {
+        // Early-Out
+        if (tryLookUpHeightMap &&
+            GlobalBlockPosition.x >= Position.x && GlobalBlockPosition.y >= Position.y &&
+            GlobalBlockPosition.x < Position.x + WorldData.ChunkSize &&
+            GlobalBlockPosition.y < Position.y + WorldData.ChunkSize )
+        {
+            int hx = GlobalBlockPosition.x - Position.x;
+            int hy = GlobalBlockPosition.y - Position.y;
+
+            if (HeightMap[hx, hy] != -1)
+                return HeightMap[hx, hy];
+        }
+
+        // Else - Compute Height
         float x = (float)GlobalBlockPosition.x / (float)WorldData.WorldSmoothingFactor * WorldData.TerrainNoiseParam.NoiseScale;
         float y = (float)GlobalBlockPosition.y / (float)WorldData.WorldSmoothingFactor * WorldData.TerrainNoiseParam.NoiseScale;
         
@@ -55,17 +69,23 @@ public class Chunk
     {
         IsActive = false;
         HeightMap = new int[WorldData.ChunkSize, WorldData.ChunkSize];
-        
+        for (int i = 0; i < WorldData.ChunkSize; ++i)
+        {
+            for (int j = 0; j < WorldData.ChunkSize; ++j)
+                HeightMap[i, j] = -1;
+        }
+
         Position = new Vector2Int(0, 0);
         BlockContainer = new BlockContainer();
     }
 
-    public void Generate(Vector2Int StartPosition)
+    public void Generate(Vector2Int StartPosition, Vector2Int EndPosition)
     {
-        Position = StartPosition;
-        Vector2Int EndPosition = StartPosition + (new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
-        
-        int hx = 0, hy = 0;
+        //Position = StartPosition;
+        //Vector2Int EndPosition = StartPosition + (new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
+
+        int hx = StartPosition.x - Position.x;
+        int hy = StartPosition.y - Position.y;
         for (int i = StartPosition.y; i < EndPosition.y; ++i)
         {
             for (int j = StartPosition.x; j < EndPosition.x; ++j)
@@ -76,7 +96,7 @@ public class Chunk
                 ++hx;
             }
 
-            hx = 0;
+            hx = StartPosition.x - Position.x;
             ++hy;
         }
     }
@@ -93,14 +113,73 @@ public class Chunk
 
     // All Chunk Tasks Go Here
     //
+    public class GeneratePartialHeightMapTask : TaskManager.Task
+    {
+        public Vector2Int in_StartPos;
+        public Vector2Int in_EndPos;
+        public Chunk inout_ChunkRef;
+
+        public override void Execute()
+        {
+            inout_ChunkRef.Generate(in_StartPos, in_EndPos);
+        }
+    }
+
     public class GenerateHeightMapTask : TaskManager.Task
     {
         public Vector2Int in_StartPos;
         public Chunk inout_ChunkRef;
 
+        public List<GeneratePartialHeightMapTask> PartialChunkTaskList;
+
+        public bool CreatedGenPartialChunkTasks = false;
+
         public override void Execute()
         {
-            inout_ChunkRef.Generate(in_StartPos);
+            WaitingFlag = true;
+
+            int numOfPartialChunks = (WorldData.ChunkSize / PlacePartialChunkPerTask) * (WorldData.ChunkSize / PlacePartialChunkPerTask);
+            
+            if (!CreatedGenPartialChunkTasks)
+            {
+                // Set Chunk Position
+                inout_ChunkRef.Position = in_StartPos;
+
+                // Generate Height Map
+                PartialChunkTaskList = new List<GeneratePartialHeightMapTask>();
+
+                Vector2Int StartPosition = in_StartPos;
+                Vector2Int EndPosition = StartPosition + new Vector2Int(PlacePartialChunkPerTask, PlacePartialChunkPerTask);
+                for (int i = 0; i < numOfPartialChunks; ++i)
+                {
+                    var NewTask = new GeneratePartialHeightMapTask();
+                    NewTask.in_StartPos = StartPosition;
+                    NewTask.in_EndPos = EndPosition;
+                    NewTask.inout_ChunkRef = inout_ChunkRef;
+
+                    PartialChunkTaskList.Add(NewTask);
+                    TaskManager.GetInstance().Enqueue(NewTask);
+
+                    StartPosition.x += PlacePartialChunkPerTask;
+                    if ((i + 1) % (WorldData.ChunkSize / PlacePartialChunkPerTask) == 0)
+                    {
+                        StartPosition.x = in_StartPos.x;
+                        StartPosition.y += PlacePartialChunkPerTask;
+                    }
+
+                    EndPosition = StartPosition + new Vector2Int(PlacePartialChunkPerTask, PlacePartialChunkPerTask);
+                }
+
+                CreatedGenPartialChunkTasks = true;
+            }
+
+            for (int i = 0; i < PartialChunkTaskList.Count; ++i)
+            {
+                if (!PartialChunkTaskList[i].Completed)
+                    return;
+            }
+
+            WaitingFlag = false;
         }
     }
 
@@ -121,14 +200,14 @@ public class Chunk
             List<int> NeighbourHeightList = new List<int>(8);
 
             Vector2Int ChunkGlobalPosition = inout_ChunkRef.Position;
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x, y + 1))));
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x, y - 1))));
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x - 1, y))));
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x + 1, y))));
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x - 1, y + 1))));       
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x - 1, y - 1))));           
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x + 1, y - 1))));           
-            NeighbourHeightList.Add(inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + (new Vector2Int(x + 1, y + 1))));
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x, y + 1), true) );
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x, y - 1), true) );
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x - 1, y), true) );
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x + 1, y), true) );
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x - 1, y + 1), true));       
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x - 1, y - 1), true));           
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x + 1, y - 1), true));           
+            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x + 1, y + 1), true));
 
             bool IsHigh = false;
             int MaxFillDepth = 0;

@@ -78,12 +78,12 @@ public class BlockContainer
 
     public void GenerateRenderBatches()
     {
-        GameObject[] gameObjects = new GameObject[BlockList.Count - 1];
-        for (int i = 1; i < BlockList.Count; ++i)
-        {
-            gameObjects[i - 1] = BlockList[i];
-        }
-        
-        StaticBatchingUtility.Combine(gameObjects, BlockList[0]);
+        //GameObject[] gameObjects = new GameObject[BlockList.Count - 1];
+        //for (int i = 1; i < BlockList.Count; ++i)
+        //{
+        //    gameObjects[i - 1] = BlockList[i];
+        //}
+
+        //StaticBatchingUtility.Combine(gameObjects, BlockList[0]);
     }
 }
