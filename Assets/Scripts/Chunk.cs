@@ -269,7 +269,7 @@ public class Chunk
                 int FillDepth = in_DepthList[c];
                 for (int i = cell.y - FillDepth; i < cell.y; ++i)
                 {
-                    var block = BlockContainerRef.CreateBlock(BlockContainer.BlockID.DIRT);
+                    var block = BlockContainerRef.CreateBlock(BlockID.DIRT);
                     block.transform.position = in_UnityGrid.CellToWorld(new Vector3Int(cell.x, i, cell.z));
                 }
             }

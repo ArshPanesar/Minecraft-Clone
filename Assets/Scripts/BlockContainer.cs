@@ -1,63 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-// For OBJLoader
-using Dummiesman;
 
 public class BlockContainer
 {
-    public enum BlockID
-    {
-        GRASS = 0,
-        DIRT
-    };
-
     public List<GameObject> BlockList;
+    public List<BlockID> BlockIDList;
     public int BlockIndex = 0;
-
-    static public GameObject GrassBlock;
-    static public GameObject DirtBlock;
 
     public BlockContainer()
     {
         BlockList = new List<GameObject>(WorldData.ChunkSize * WorldData.ChunkSize);
-        /*GrassBlock = new OBJLoader().Load("Assets/Resources/Models/GrassBlock.obj");
-        DirtBlock = new OBJLoader().Load("Assets/Resources/Models/DirtBlock.obj");
-        GrassBlock = GrassBlock.gameObject.transform.GetChild(0).gameObject;
-        DirtBlock = DirtBlock.gameObject.transform.GetChild(0).gameObject;*/
-        
-        // Set Up the Blocks
-        //
-        // Block will never move
-        GrassBlock.isStatic = true;
-        DirtBlock.isStatic = true;
-        // Instance all materials in every block
-        var materials = GrassBlock.GetComponentInChildren<MeshRenderer>().sharedMaterials;
-        foreach (var m in materials) 
-        {
-            m.enableInstancing = true;
-        }
-        materials = DirtBlock.GetComponentInChildren<MeshRenderer>().sharedMaterials;
-        foreach (var m in materials)
-        {
-            m.enableInstancing = true;
-        }
+        BlockIDList = new List<BlockID>(WorldData.ChunkSize * WorldData.ChunkSize);
     }
 
     public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
     {
-        OBJLoader loader = new OBJLoader();
-        switch (blockID) 
-        {
-            case BlockID.DIRT:
-                BlockList.Add(GameObject.Instantiate(DirtBlock));
-                break;
-            case BlockID.GRASS:
-                BlockList.Add(GameObject.Instantiate(GrassBlock));
-                break;
-        }
+        //Debug.Log("Block Index: " + BlockList.Count);
+        BlockList.Add(BlockPool.GetInstance().CreateBlock(blockID));
+        BlockIDList.Add(blockID);
 
-        return BlockList[BlockList.Count - 1];
+        var Block = BlockList[BlockIndex];
+        ++BlockIndex;
+        return Block;
     }
 
     public GameObject GetBlock(int index)
@@ -71,9 +36,10 @@ public class BlockContainer
     {
         for (int i = 0; i < BlockList.Count; ++i)
         {
-            GameObject.Destroy(BlockList[i]);
+            BlockPool.GetInstance().DestroyBlock(BlockList[i], BlockIDList[i]);
         }
         BlockList.Clear();
+        BlockIDList.Clear();
     }
 
     public void GenerateRenderBatches()

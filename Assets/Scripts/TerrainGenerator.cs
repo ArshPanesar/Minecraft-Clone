@@ -47,8 +47,12 @@ public class TerrainGenerator : MonoBehaviour
         // Set Block Data
         GrassBlock = GrassBlock.transform.GetChild(0).gameObject;
         DirtBlock = DirtBlock.transform.GetChild(0).gameObject;
-        BlockContainer.DirtBlock = DirtBlock;
-        BlockContainer.GrassBlock = GrassBlock;
+        //BlockContainer.DirtBlock = DirtBlock;
+        //BlockContainer.GrassBlock = GrassBlock;
+
+        BlockPool.DirtBlock = DirtBlock;
+        BlockPool.GrassBlock = GrassBlock;
+        Debug.Log("Pool Created: " + BlockPool.GetInstance().NumOfBlocks);
 
         // Set World Data
         WorldData.ChunkSize = ChunkSize;
@@ -108,6 +112,7 @@ public class TerrainGenerator : MonoBehaviour
         LoaderWindowEnd /= WorldData.ChunkSize;
         
         
+        // Chunk Loading
         int Count = 0;
         Vector2Int CurrentChunkPosition = new Vector2Int();
         List<Chunk.GenerateChunkTask> ChunkTaskList = new List<Chunk.GenerateChunkTask>(8);
@@ -140,6 +145,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             TaskManager.GetInstance().Enqueue(ChunkTaskList[i]);
         }
+
 
         // Destroy Chunks Out of Window
         List<Vector2Int> RemoveChunkList = new List<Vector2Int>(WorldData.ChunkMap.Keys.Count);
