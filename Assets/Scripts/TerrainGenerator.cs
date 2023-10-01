@@ -175,6 +175,9 @@ public class TerrainGenerator : MonoBehaviour
         {
             Chunk.Destroy();
         }
+
+        BlockPool.GetInstance().ResetAllBlocks();
+
         WorldData.ChunkMap.Clear();
     }
 }

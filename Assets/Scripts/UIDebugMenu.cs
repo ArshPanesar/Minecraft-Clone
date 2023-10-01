@@ -18,11 +18,6 @@ public class UIDebugMenu : MonoBehaviour
     public TMP_InputField PerlinShiftInputField;
     public TMP_InputField NoiseScaleInputField;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
-
     public void OnGenerate()
     {
         // Copy Input to Noise Parameters

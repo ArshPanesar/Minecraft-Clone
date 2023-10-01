@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BlockID
+public enum BlockID : int
 {
     GRASS = 0,
-    DIRT
+    DIRT,
+    NUM_OF_BLOCKS
 };
 
 public class BlockPool
@@ -38,13 +39,12 @@ public class BlockPool
     public static GameObject GrassBlock;
     public static GameObject DirtBlock;
 
-    public int NumOfBlocks = 65536;
+    public int NumOfBlocks = 60000;
 
     private List<GameObject> PooledBlocks;
 
-    private BlockList GrassBlockList;
-    private BlockList DirtBlockList;
-
+    private List<BlockList> BlockListTable;
+    
     public BlockPool()
     {
         // Set Up the Blocks
@@ -67,25 +67,26 @@ public class BlockPool
         // Prepare the Pool
         PooledBlocks = new List<GameObject>();
 
-        GrassBlockList = new BlockList();
-        DirtBlockList = new BlockList();
+        BlockListTable = new List<BlockList>();
+        for (int i = 0; i < (int)BlockID.NUM_OF_BLOCKS; i++)
+            BlockListTable.Add(new BlockList());
 
         // Assign Indices and Current
-        GrassBlockList.PoolStartIndex = 0;
-        DirtBlockList.PoolStartIndex = GrassBlockList.PoolStartIndex + NumOfBlocks;
+        BlockListTable[(int)BlockID.GRASS].PoolStartIndex = 0;
+        BlockListTable[(int)BlockID.DIRT].PoolStartIndex = BlockListTable[(int)BlockID.GRASS].PoolStartIndex + NumOfBlocks;
 
         // Instantiate Each Block
         int IDOffset = 0;
         for (int i = 0; i < NumOfBlocks; i++)
         {
             PooledBlocks.Add(GameObject.Instantiate(GrassBlock));
-            GrassBlockList.FreeIDs.Enqueue(IDOffset + i);
+            BlockListTable[(int)BlockID.GRASS].FreeIDs.Enqueue(IDOffset + i);
         }
         IDOffset = PooledBlocks.Count;
         for (int i = 0; i < NumOfBlocks; i++)
         {
             PooledBlocks.Add(GameObject.Instantiate(DirtBlock));
-            DirtBlockList.FreeIDs.Enqueue(IDOffset + i);
+            BlockListTable[(int)BlockID.DIRT].FreeIDs.Enqueue(IDOffset + i);
         }
     }
 
@@ -95,15 +96,20 @@ public class BlockPool
         switch (blockID)
         {
             case BlockID.DIRT:
-                ID = DirtBlockList.FreeIDs.Dequeue();
-                DirtBlockList.UsedIDs.Enqueue(ID);
+                ID = BlockListTable[(int)BlockID.DIRT].FreeIDs.Dequeue();
+                BlockListTable[(int)BlockID.DIRT].UsedIDs.Enqueue(ID);
+
+                //Debug.Log("Dirt Blocks: " + BlockListTable[(int)BlockID.DIRT].UsedIDs.Count);
+
 
                 return PooledBlocks[ID];
 
             case BlockID.GRASS:
-                ID = GrassBlockList.FreeIDs.Dequeue();
-                GrassBlockList.UsedIDs.Enqueue(ID);
-
+                ID = BlockListTable[(int)BlockID.GRASS].FreeIDs.Dequeue();
+                BlockListTable[(int)BlockID.GRASS].UsedIDs.Enqueue(ID);
+                
+                //Debug.Log("Grass Blocks: " + BlockListTable[(int)BlockID.GRASS].UsedIDs.Count);
+                
                 return PooledBlocks[ID];
         }
 
@@ -116,16 +122,26 @@ public class BlockPool
         switch (BlockID)
         {
             case BlockID.DIRT:
-                ID = DirtBlockList.UsedIDs.Dequeue();
-                DirtBlockList.FreeIDs.Enqueue(ID);
+                ID = BlockListTable[(int)BlockID.DIRT].UsedIDs.Dequeue();
+                BlockListTable[(int)BlockID.DIRT].FreeIDs.Enqueue(ID);
+
+                //Debug.Log("Dirt Blocks: " + BlockListTable[(int)BlockID.DIRT].UsedIDs.Count);
 
                 break;
 
             case BlockID.GRASS:
-                ID = GrassBlockList.UsedIDs.Dequeue();
-                GrassBlockList.FreeIDs.Enqueue(ID);
+                ID = BlockListTable[(int)BlockID.GRASS].UsedIDs.Dequeue();
+                BlockListTable[(int)BlockID.GRASS].FreeIDs.Enqueue(ID);
+
+                //Debug.Log("Grass Blocks: " + BlockListTable[(int)BlockID.GRASS].UsedIDs.Count);
 
                 break; 
         }
+    }
+
+    public void ResetAllBlocks()
+    {
+        for (int i = 0; i < PooledBlocks.Count; ++i)
+            PooledBlocks[i].transform.position = Vector3.zero;
     }
 }
