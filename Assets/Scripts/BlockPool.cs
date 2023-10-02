@@ -14,15 +14,7 @@ public class BlockPool
     // Block Metadata Container for Fast Processing
     public class BlockList
     {
-        public Queue<int> FreeIDs;
-        public Queue<int> UsedIDs;
-        public int PoolStartIndex = -1;
-
-        public BlockList()
-        {
-            FreeIDs = new Queue<int>();
-            UsedIDs = new Queue<int>();
-        }
+        public Queue<int> FreeIDs = new Queue<int>();
     }
 
     // Singleton
@@ -39,9 +31,9 @@ public class BlockPool
     public static GameObject GrassBlock;
     public static GameObject DirtBlock;
 
-    public int NumOfBlocks = 60000;
+    public int NumOfBlocks = 50000;
 
-    private List<GameObject> PooledBlocks;
+    private List<GameObject>[] PooledBlocksTable;
 
     private List<BlockList> BlockListTable;
     
@@ -65,83 +57,60 @@ public class BlockPool
         }
 
         // Prepare the Pool
-        PooledBlocks = new List<GameObject>();
+        PooledBlocksTable = new List<GameObject>[(int)BlockID.NUM_OF_BLOCKS];
+        for (int i = 0; i < PooledBlocksTable.Length; ++i)
+            PooledBlocksTable[i] = new List<GameObject>();
 
         BlockListTable = new List<BlockList>();
         for (int i = 0; i < (int)BlockID.NUM_OF_BLOCKS; i++)
             BlockListTable.Add(new BlockList());
 
-        // Assign Indices and Current
-        BlockListTable[(int)BlockID.GRASS].PoolStartIndex = 0;
-        BlockListTable[(int)BlockID.DIRT].PoolStartIndex = BlockListTable[(int)BlockID.GRASS].PoolStartIndex + NumOfBlocks;
+        // Generate Pool
+        ExpandPool();
+    }
 
+    private void ExpandPool()
+    {
         // Instantiate Each Block
-        int IDOffset = 0;
+        //
+        int IDOffset = PooledBlocksTable[(int)BlockID.GRASS].Count;
         for (int i = 0; i < NumOfBlocks; i++)
         {
-            PooledBlocks.Add(GameObject.Instantiate(GrassBlock));
+            PooledBlocksTable[(int)BlockID.GRASS].Add(GameObject.Instantiate(GrassBlock));
             BlockListTable[(int)BlockID.GRASS].FreeIDs.Enqueue(IDOffset + i);
         }
-        IDOffset = PooledBlocks.Count;
+        IDOffset = PooledBlocksTable[(int)BlockID.DIRT].Count;
         for (int i = 0; i < NumOfBlocks; i++)
         {
-            PooledBlocks.Add(GameObject.Instantiate(DirtBlock));
+            PooledBlocksTable[(int)BlockID.DIRT].Add(GameObject.Instantiate(DirtBlock));
             BlockListTable[(int)BlockID.DIRT].FreeIDs.Enqueue(IDOffset + i);
         }
     }
 
-    public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
+    public GameObject CreateBlock(out int UsedID, BlockID blockID = BlockID.GRASS)
     {
-        int ID = -1;
-        switch (blockID)
+        // Check if More Blocks are needed
+        if (BlockListTable[(int)blockID].FreeIDs.Count - 1 < 1)
         {
-            case BlockID.DIRT:
-                ID = BlockListTable[(int)BlockID.DIRT].FreeIDs.Dequeue();
-                BlockListTable[(int)BlockID.DIRT].UsedIDs.Enqueue(ID);
-
-                //Debug.Log("Dirt Blocks: " + BlockListTable[(int)BlockID.DIRT].UsedIDs.Count);
-
-
-                return PooledBlocks[ID];
-
-            case BlockID.GRASS:
-                ID = BlockListTable[(int)BlockID.GRASS].FreeIDs.Dequeue();
-                BlockListTable[(int)BlockID.GRASS].UsedIDs.Enqueue(ID);
-                
-                //Debug.Log("Grass Blocks: " + BlockListTable[(int)BlockID.GRASS].UsedIDs.Count);
-                
-                return PooledBlocks[ID];
+            ExpandPool();
         }
 
-        return null;
+        UsedID = BlockListTable[(int)blockID].FreeIDs.Dequeue();
+        return PooledBlocksTable[(int)blockID][UsedID];
     }
 
-    public void DestroyBlock(GameObject Block, BlockID BlockID)
+    public void DestroyBlock(int UsedID, BlockID blockID)
     {
-        int ID = -1;
-        switch (BlockID)
-        {
-            case BlockID.DIRT:
-                ID = BlockListTable[(int)BlockID.DIRT].UsedIDs.Dequeue();
-                BlockListTable[(int)BlockID.DIRT].FreeIDs.Enqueue(ID);
-
-                //Debug.Log("Dirt Blocks: " + BlockListTable[(int)BlockID.DIRT].UsedIDs.Count);
-
-                break;
-
-            case BlockID.GRASS:
-                ID = BlockListTable[(int)BlockID.GRASS].UsedIDs.Dequeue();
-                BlockListTable[(int)BlockID.GRASS].FreeIDs.Enqueue(ID);
-
-                //Debug.Log("Grass Blocks: " + BlockListTable[(int)BlockID.GRASS].UsedIDs.Count);
-
-                break; 
-        }
+        PooledBlocksTable[(int)blockID][UsedID].transform.position = Vector3.zero;
+        BlockListTable[(int)blockID].FreeIDs.Enqueue(UsedID);
     }
 
     public void ResetAllBlocks()
     {
-        for (int i = 0; i < PooledBlocks.Count; ++i)
-            PooledBlocks[i].transform.position = Vector3.zero;
+        for (int i = 0; i < PooledBlocksTable.Length; ++i)
+        {
+            for (int j = 0; j < PooledBlocksTable[i].Count; ++j)
+                PooledBlocksTable[i][j].transform.position = Vector3.zero;
+        }
     }
 }

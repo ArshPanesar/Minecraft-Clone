@@ -110,8 +110,19 @@ public class TerrainGenerator : MonoBehaviour
         // Normalizing Window Size to Chunk Size
         LoaderWindowStart /= WorldData.ChunkSize;
         LoaderWindowEnd /= WorldData.ChunkSize;
+
         
-        
+        //Vector2Int CurrentChunk = new Vector2Int(Mathf.FloorToInt(WorldData.PlayerPosition.x), Mathf.FloorToInt(WorldData.PlayerPosition.z));
+        //CurrentChunk /= WorldData.ChunkSize;
+        //Debug.Log(CurrentChunk);
+        //if (WorldData.ChunkMap.ContainsKey(CurrentChunk))
+        //{
+        //    Debug.Log("Chunk in Map");
+        //    if (WorldData.ChunkMap[CurrentChunk].IsActive)
+        //        Debug.Log("CHunk is Active");
+        //}
+
+
         // Chunk Loading
         int Count = 0;
         Vector2Int CurrentChunkPosition = new Vector2Int();

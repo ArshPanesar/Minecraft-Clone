@@ -29,7 +29,7 @@ public class TaskManager
         public abstract void Execute();
     }
 
-    public int NumOfTasksPerUpdate = 4;
+    public int NumOfTasksPerUpdate = 8;
 
     private Queue<Task> TaskQueue;
 

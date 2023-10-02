@@ -6,23 +6,23 @@ public class BlockContainer
 {
     public List<GameObject> BlockList;
     public List<BlockID> BlockIDList;
-    public int BlockIndex = 0;
-
+    public List<int> BlockPoolIndexList;
+    
     public BlockContainer()
     {
         BlockList = new List<GameObject>(WorldData.ChunkSize * WorldData.ChunkSize);
         BlockIDList = new List<BlockID>(WorldData.ChunkSize * WorldData.ChunkSize);
+        BlockPoolIndexList = new List<int>(WorldData.ChunkSize * WorldData.ChunkSize);
     }
 
     public GameObject CreateBlock(BlockID blockID = BlockID.GRASS)
     {
-        //Debug.Log("Block Index: " + BlockList.Count);
-        BlockList.Add(BlockPool.GetInstance().CreateBlock(blockID));
+        int UsedID = 0;
+        BlockList.Add(BlockPool.GetInstance().CreateBlock(out UsedID, blockID));
         BlockIDList.Add(blockID);
+        BlockPoolIndexList.Add(UsedID);
 
-        var Block = BlockList[BlockIndex];
-        ++BlockIndex;
-        return Block;
+        return BlockList[BlockList.Count - 1];
     }
 
     public GameObject GetBlock(int index)
@@ -36,10 +36,11 @@ public class BlockContainer
     {
         for (int i = 0; i < BlockList.Count; ++i)
         {
-            BlockPool.GetInstance().DestroyBlock(BlockList[i], BlockIDList[i]);
+            BlockPool.GetInstance().DestroyBlock(BlockPoolIndexList[i], BlockIDList[i]);
         }
         BlockList.Clear();
         BlockIDList.Clear();
+        BlockPoolIndexList.Clear();
     }
 
     public void GenerateRenderBatches()

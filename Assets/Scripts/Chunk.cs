@@ -179,6 +179,7 @@ public class Chunk
                     return;
             }
 
+            // Completed
             WaitingFlag = false;
         }
     }
