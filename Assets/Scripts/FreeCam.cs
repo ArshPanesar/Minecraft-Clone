@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// A simple free camera to be added to a Unity game object.
@@ -54,6 +55,12 @@ public class FreeCam : MonoBehaviour
 
     // Debug Panel
     public GameObject debugMenuPanel = null;
+
+    // FPS Display
+    public Text FPSText;
+    public int AvgFrameCount = 15; // Averages FPS from previous <count> frames
+    private float AccumFPS = 0.0f;
+    private int CurrentFrameCounter = 0;
 
     void Update()
     {
@@ -122,6 +129,8 @@ public class FreeCam : MonoBehaviour
         {
             StopLooking();
         }
+
+        UpdateFPSCounter();
     }
 
     void OnDisable()
@@ -160,6 +169,24 @@ public class FreeCam : MonoBehaviour
         if (debugMenuPanel != null)
         {
             debugMenuPanel.SetActive(!debugMenuPanel.activeInHierarchy);
+        }
+    }
+
+    public void UpdateFPSCounter()
+    {
+        if (CurrentFrameCounter < AvgFrameCount)
+        {
+            AccumFPS += (1.0f / (float)Time.unscaledDeltaTime);
+            ++CurrentFrameCounter;
+        }
+        else
+        {
+            AccumFPS /= AvgFrameCount;
+            FPSText.text = AccumFPS.ToString();
+
+            // Reset
+            AccumFPS = 0.0f;
+            CurrentFrameCounter = 0;
         }
     }
 }
