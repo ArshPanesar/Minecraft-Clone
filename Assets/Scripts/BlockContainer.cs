@@ -7,7 +7,7 @@ public class BlockContainer
     public List<GameObject> BlockList;
     public List<BlockID> BlockIDList;
     public List<int> BlockPoolIndexList;
-    
+
     public BlockContainer()
     {
         BlockList = new List<GameObject>(WorldData.ChunkSize * WorldData.ChunkSize);
@@ -43,14 +43,32 @@ public class BlockContainer
         BlockPoolIndexList.Clear();
     }
 
-    public void GenerateRenderBatches()
+    // Merges all Same ID Blocks into a Single Mesh
+    // Call this function when all the Blocks are Positioned in the World Correctly
+    public Mesh MergeIntoSingleMesh(BlockID blockID)
     {
-        //GameObject[] gameObjects = new GameObject[BlockList.Count - 1];
-        //for (int i = 1; i < BlockList.Count; ++i)
-        //{
-        //    gameObjects[i - 1] = BlockList[i];
-        //}
+        int NumOfBlocks = 0;
+        for (int i = 0; i < BlockIDList.Count; ++i)
+        {
+            if (BlockIDList[i] == blockID)
+            {
+                ++NumOfBlocks;
+            }
+        }
+        CombineInstance[] CombineBlockList = new CombineInstance[NumOfBlocks];
+        int j = 0;
+        for (int i = 0; i < BlockList.Count; ++i)
+        {
+            if (BlockIDList[i] != blockID)
+                continue;
 
-        //StaticBatchingUtility.Combine(gameObjects, BlockList[0]);
+            CombineBlockList[j].mesh = BlockList[i].GetComponent<MeshFilter>().sharedMesh;
+            CombineBlockList[j].transform = BlockList[i].GetComponent<MeshFilter>().transform.localToWorldMatrix;
+            ++j;
+        }
+        
+        Mesh MeshRef = new Mesh();
+        MeshRef.CombineMeshes(CombineBlockList);
+        return MeshRef;
     }
 }

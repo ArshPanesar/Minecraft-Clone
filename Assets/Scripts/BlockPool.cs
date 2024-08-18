@@ -42,8 +42,10 @@ public class BlockPool
         // Set Up the Blocks
         //
         // Don't Render Blocks unless Created
-        GrassBlock.GetComponent<MeshRenderer>().enabled = false;
-        DirtBlock.GetComponent<MeshRenderer>().enabled = false;
+        GrassBlock.SetActive(false);
+        DirtBlock.SetActive(false);
+        //GrassBlock.GetComponent<MeshRenderer>().enabled = false;
+        //DirtBlock.GetComponent<MeshRenderer>().enabled = false;
         // Block will never move
         GrassBlock.isStatic = true;
         DirtBlock.isStatic = true;
@@ -100,7 +102,15 @@ public class BlockPool
 
         UsedID = BlockListTable[(int)blockID].FreeIDs.Dequeue();
         GameObject BlockRef = PooledBlocksTable[(int)blockID][UsedID];
-        
+
+        //BlockRef.GetComponent<MeshRenderer>().enabled = true;
+        return BlockRef;
+    }
+
+    // Creates a Block that can be used to render a Chunk Mesh
+    public GameObject CreateDummyBlock()
+    {
+        GameObject BlockRef = GameObject.Instantiate(GrassBlock);
         BlockRef.GetComponent<MeshRenderer>().enabled = true;
         return BlockRef;
     }
@@ -109,7 +119,7 @@ public class BlockPool
     {
         GameObject BlockRef = PooledBlocksTable[(int)blockID][UsedID];
         BlockRef.transform.position = Vector3.zero;
-        BlockRef.GetComponent<MeshRenderer>().enabled = false;
+        //BlockRef.GetComponent<MeshRenderer>().enabled = false;
         BlockListTable[(int)blockID].FreeIDs.Enqueue(UsedID);
     }
 

@@ -20,6 +20,11 @@ public class Chunk
     private Vector2Int Position;
     private BlockContainer BlockContainer;
 
+    // Single Mesh of Blocks
+    // Optimized for Rendering
+    private GameObject GrassMesh;
+    private GameObject DirtMesh;
+
     public int GetBlockHeight(Vector2Int GlobalBlockPosition, bool tryLookUpHeightMap = false)
     {
         // Early-Out
@@ -77,6 +82,9 @@ public class Chunk
 
         Position = new Vector2Int(0, 0);
         BlockContainer = new BlockContainer();
+
+        GrassMesh = BlockPool.GetInstance().CreateDummyBlock();
+        DirtMesh = BlockPool.GetInstance().CreateDummyBlock();
     }
 
     public void Generate(Vector2Int StartPosition, Vector2Int EndPosition)
@@ -439,6 +447,15 @@ public class Chunk
                 return;
             }
             // Chunk Generation Complete
+
+            // Merge all Blocks into a Single Mesh
+            inout_ChunkRef.GrassMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.GRASS);
+            inout_ChunkRef.GrassMesh.SetActive(true);
+            
+            inout_ChunkRef.DirtMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.DIRT);
+            inout_ChunkRef.DirtMesh.SetActive(true);
+
+            inout_ChunkRef.BlockContainer.ClearAll();
 
             // Finally Set the Chunk to Active
             inout_ChunkRef.IsActive = true;
