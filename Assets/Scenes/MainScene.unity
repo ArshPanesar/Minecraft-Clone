@@ -192,6 +192,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7635826562936255635, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
+      propertyPath: m_DynamicOccludee
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7635826562936255635, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 1e12b841924923e41bf3cd9fb374a1d2, type: 2}
@@ -214,6 +218,10 @@ PrefabInstance:
     - target: {fileID: 8164078558771037576, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_Name
       value: DirtBlock
+      objectReference: {fileID: 0}
+    - target: {fileID: 8164078558771037576, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2286,6 +2294,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7635826562936255635, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
+      propertyPath: m_DynamicOccludee
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7635826562936255635, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 1e12b841924923e41bf3cd9fb374a1d2, type: 2}
@@ -2308,6 +2320,10 @@ PrefabInstance:
     - target: {fileID: 8164078558771037576, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
       propertyPath: m_Name
       value: GrassBlock
+      objectReference: {fileID: 0}
+    - target: {fileID: 8164078558771037576, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
