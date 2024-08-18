@@ -204,6 +204,10 @@ PrefabInstance:
       value: DirtBlock
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
       objectReference: {fileID: 0}
@@ -1976,7 +1980,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!108 &705507994
 Light:
@@ -2424,7 +2428,7 @@ MonoBehaviour:
   fog: 1
   debugMenuPanel: {fileID: 703373158}
   FPSText: {fileID: 1302736442}
-  AvgFrameCount: 10
+  AvgFrameCount: 15
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0

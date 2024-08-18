@@ -41,6 +41,9 @@ public class BlockPool
     {
         // Set Up the Blocks
         //
+        // Don't Render Blocks unless Created
+        GrassBlock.GetComponent<MeshRenderer>().enabled = false;
+        DirtBlock.GetComponent<MeshRenderer>().enabled = false;
         // Block will never move
         GrassBlock.isStatic = true;
         DirtBlock.isStatic = true;
@@ -96,12 +99,17 @@ public class BlockPool
         }
 
         UsedID = BlockListTable[(int)blockID].FreeIDs.Dequeue();
-        return PooledBlocksTable[(int)blockID][UsedID];
+        GameObject BlockRef = PooledBlocksTable[(int)blockID][UsedID];
+        
+        BlockRef.GetComponent<MeshRenderer>().enabled = true;
+        return BlockRef;
     }
 
     public void DestroyBlock(int UsedID, BlockID blockID)
     {
-        PooledBlocksTable[(int)blockID][UsedID].transform.position = Vector3.zero;
+        GameObject BlockRef = PooledBlocksTable[(int)blockID][UsedID];
+        BlockRef.transform.position = Vector3.zero;
+        BlockRef.GetComponent<MeshRenderer>().enabled = false;
         BlockListTable[(int)blockID].FreeIDs.Enqueue(UsedID);
     }
 
