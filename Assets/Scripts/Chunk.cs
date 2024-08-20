@@ -116,6 +116,11 @@ public class Chunk
         BlockContainer = null;
         HeightMap = null;
         IsActive = false;
+
+        GameObject.Destroy(GrassMesh);
+        GameObject.Destroy(DirtMesh);
+        GrassMesh = null;
+        DirtMesh = null;
     }
 
 
@@ -396,6 +401,40 @@ public class Chunk
         }
     }
 
+    public class GenerateChunkMeshTask : TaskManager.Task
+    {
+        public Chunk inout_ChunkRef;
+
+        private bool GrassMeshCreated = false;
+        private bool DirtMeshCreated = false;
+
+        public override void Execute()
+        {
+            WaitingFlag = true;
+
+            //
+            // Grass Mesh and Dirt Mesh are created in Separate Frames
+            //
+
+            if (!GrassMeshCreated) 
+            {
+                inout_ChunkRef.GrassMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.GRASS);
+                inout_ChunkRef.GrassMesh.SetActive(true);
+                GrassMeshCreated = true;
+                return;
+            }
+
+            if (!DirtMeshCreated)
+            {
+                inout_ChunkRef.DirtMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.DIRT);
+                inout_ChunkRef.DirtMesh.SetActive(true);
+                DirtMeshCreated = true;
+            }
+            
+            WaitingFlag = false;
+        }
+    }
+
     public class GenerateChunkTask : TaskManager.Task
     {
         public Vector2Int in_StartPosition;
@@ -406,8 +445,10 @@ public class Chunk
         // Chunk Generation Parameters
         private bool CreatedGenerateTask = false;
         private bool CreatedPlaceBlocksTask = false;
+        private bool CreatedGenerateChunkMeshTask = false;
         private GenerateHeightMapTask GenMapTask;
         private PlaceAllBlocksTask PlaceBlocksTask;
+        private GenerateChunkMeshTask GenChunkMeshTask;
 
         public override void Execute()
         {
@@ -449,13 +490,21 @@ public class Chunk
             // Chunk Generation Complete
 
             // Merge all Blocks into a Single Mesh
-            inout_ChunkRef.GrassMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.GRASS);
-            inout_ChunkRef.GrassMesh.SetActive(true);
-            
-            inout_ChunkRef.DirtMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.DIRT);
-            inout_ChunkRef.DirtMesh.SetActive(true);
+            if (!CreatedGenerateChunkMeshTask)
+            {
+                GenChunkMeshTask = new GenerateChunkMeshTask();
+                GenChunkMeshTask.inout_ChunkRef = inout_ChunkRef;
 
-            inout_ChunkRef.BlockContainer.ClearAll();
+                TaskManager.GetInstance().Enqueue(GenChunkMeshTask);
+                
+                CreatedGenerateChunkMeshTask = true;
+            }
+
+            // Wait for Chunk Meshes to be Created
+            if (!GenChunkMeshTask.Completed)
+            {
+                return;
+            }
 
             // Finally Set the Chunk to Active
             inout_ChunkRef.IsActive = true;
