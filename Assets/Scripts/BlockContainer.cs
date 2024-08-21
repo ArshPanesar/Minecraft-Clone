@@ -45,30 +45,36 @@ public class BlockContainer
 
     // Merges all Same ID Blocks into a Single Mesh
     // Call this function when all the Blocks are Positioned in the World Correctly
-    public Mesh MergeIntoSingleMesh(BlockID blockID)
+    public void MergeIntoBigMeshes(out List<Mesh> MeshList)
     {
-        int NumOfBlocks = 0;
-        for (int i = 0; i < BlockIDList.Count; ++i)
-        {
-            if (BlockIDList[i] == blockID)
-            {
-                ++NumOfBlocks;
-            }
-        }
-        CombineInstance[] CombineBlockList = new CombineInstance[NumOfBlocks];
-        int j = 0;
-        for (int i = 0; i < BlockList.Count; ++i)
-        {
-            if (BlockIDList[i] != blockID)
-                continue;
+        const int MaxVerticesAllowed = 65536;
 
-            CombineBlockList[j].mesh = BlockList[i].GetComponent<MeshFilter>().sharedMesh;
-            CombineBlockList[j].transform = BlockList[i].GetComponent<MeshFilter>().transform.localToWorldMatrix;
-            ++j;
+        // Calculate Number of Big Meshes
+        int VerticesPerBlock = BlockList[0].GetComponent<MeshFilter>().sharedMesh.vertexCount;
+        int NumOfVertices = BlockList.Count * VerticesPerBlock;
+        int NumOfBigMeshes = Mathf.CeilToInt((float)NumOfVertices / (float)MaxVerticesAllowed); // Dividing by Max Vertices Allowed Per Mesh
+
+        // Generate Merged Meshes
+        MeshList = new List<Mesh>(NumOfBigMeshes);
+        int NumOfBlocksPerMesh = Mathf.FloorToInt((float)MaxVerticesAllowed / (float)VerticesPerBlock);
+        int StartBlockIndex = 0;
+        for (int i = 0; i < NumOfBigMeshes; ++i)
+        {
+            int EndBlockIndex = Mathf.Clamp(StartBlockIndex + NumOfBlocksPerMesh, 0, BlockList.Count);
+            
+            CombineInstance[] CombineBlockList = new CombineInstance[EndBlockIndex - StartBlockIndex];
+            int k = 0;
+            for (int j = StartBlockIndex; j < EndBlockIndex; ++j)
+            {
+                CombineBlockList[k].mesh = BlockList[j].GetComponent<MeshFilter>().sharedMesh;
+                CombineBlockList[k].transform = BlockList[j].GetComponent<MeshFilter>().transform.localToWorldMatrix;
+                ++k;
+            }
+            StartBlockIndex = EndBlockIndex;
+
+            Mesh MeshRef = new Mesh();
+            MeshRef.CombineMeshes(CombineBlockList, true);
+            MeshList.Add(MeshRef);
         }
-        
-        Mesh MeshRef = new Mesh();
-        MeshRef.CombineMeshes(CombineBlockList);
-        return MeshRef;
     }
 }

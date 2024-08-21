@@ -20,10 +20,9 @@ public class Chunk
     private Vector2Int Position;
     private BlockContainer BlockContainer;
 
-    // Single Mesh of Blocks
+    // List of Big Meshes merged from all Small Block Meshes
     // Optimized for Rendering
-    private GameObject GrassMesh;
-    private GameObject DirtMesh;
+    private List<GameObject> MeshList;
 
     public int GetBlockHeight(Vector2Int GlobalBlockPosition, bool tryLookUpHeightMap = false)
     {
@@ -83,8 +82,7 @@ public class Chunk
         Position = new Vector2Int(0, 0);
         BlockContainer = new BlockContainer();
 
-        GrassMesh = BlockPool.GetInstance().CreateDummyBlock();
-        DirtMesh = BlockPool.GetInstance().CreateDummyBlock();
+        MeshList = new List<GameObject>();
     }
 
     public void Generate(Vector2Int StartPosition, Vector2Int EndPosition)
@@ -117,10 +115,11 @@ public class Chunk
         HeightMap = null;
         IsActive = false;
 
-        GameObject.Destroy(GrassMesh);
-        GameObject.Destroy(DirtMesh);
-        GrassMesh = null;
-        DirtMesh = null;
+        for (int i = 0; i < MeshList.Count; ++i)
+        {
+            GameObject.Destroy(MeshList[i]);
+        }
+        MeshList.Clear();
     }
 
 
@@ -405,32 +404,23 @@ public class Chunk
     {
         public Chunk inout_ChunkRef;
 
-        private bool GrassMeshCreated = false;
-        private bool DirtMeshCreated = false;
-
         public override void Execute()
         {
             WaitingFlag = true;
 
-            //
-            // Grass Mesh and Dirt Mesh are created in Separate Frames
-            //
+            // Generate the Meshes
+            List<Mesh> Meshes;
+            inout_ChunkRef.BlockContainer.MergeIntoBigMeshes(out Meshes);
 
-            if (!GrassMeshCreated) 
+            // Assign a GameObject to these Meshes
+            inout_ChunkRef.MeshList = new List<GameObject>(Meshes.Count);
+            for (int i = 0; i < Meshes.Count; ++i)
             {
-                inout_ChunkRef.GrassMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.GRASS);
-                inout_ChunkRef.GrassMesh.SetActive(true);
-                GrassMeshCreated = true;
-                return;
+                inout_ChunkRef.MeshList.Add(BlockPool.GetInstance().CreateDummyBlock());
+                inout_ChunkRef.MeshList[i].GetComponent<MeshFilter>().sharedMesh = Meshes[i];
+                inout_ChunkRef.MeshList[i].SetActive(true);
             }
 
-            if (!DirtMeshCreated)
-            {
-                inout_ChunkRef.DirtMesh.GetComponent<MeshFilter>().sharedMesh = inout_ChunkRef.BlockContainer.MergeIntoSingleMesh(BlockID.DIRT);
-                inout_ChunkRef.DirtMesh.SetActive(true);
-                DirtMeshCreated = true;
-            }
-            
             WaitingFlag = false;
         }
     }
