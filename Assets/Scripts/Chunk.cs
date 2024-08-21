@@ -404,15 +404,32 @@ public class Chunk
     {
         public Chunk inout_ChunkRef;
 
+        private bool CreatedMergeTask = false;
+        private BlockContainer.GenerateMergedMeshesTask MergeTask;
+
         public override void Execute()
         {
             WaitingFlag = true;
 
             // Generate the Meshes
-            List<Mesh> Meshes;
-            inout_ChunkRef.BlockContainer.MergeIntoBigMeshes(out Meshes);
+            if (!CreatedMergeTask)
+            {
+                MergeTask = new BlockContainer.GenerateMergedMeshesTask();
+                MergeTask.in_BlockList = inout_ChunkRef.BlockContainer.BlockList;
+                MergeTask.in_MaxMeshesCombine = 512;
 
+                TaskManager.GetInstance().Enqueue(MergeTask);
+
+                CreatedMergeTask = true;
+            }
+
+            if (!MergeTask.Completed)
+            {
+                return;
+            }
+            
             // Assign a GameObject to these Meshes
+            List<Mesh> Meshes = MergeTask.out_MeshList;
             inout_ChunkRef.MeshList = new List<GameObject>(Meshes.Count);
             for (int i = 0; i < Meshes.Count; ++i)
             {
