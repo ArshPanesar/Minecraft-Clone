@@ -209,7 +209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -218,6 +218,10 @@ PrefabInstance:
     - target: {fileID: 8164078558771037576, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_Name
       value: DirtBlock
+      objectReference: {fileID: 0}
+    - target: {fileID: 8164078558771037576, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8164078558771037576, guid: bbe66057a9d956546ba6d8370be49427, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2307,7 +2311,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2320,6 +2324,10 @@ PrefabInstance:
     - target: {fileID: 8164078558771037576, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
       propertyPath: m_Name
       value: GrassBlock
+      objectReference: {fileID: 0}
+    - target: {fileID: 8164078558771037576, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8164078558771037576, guid: 6da8ae32c3aafb04db5495d48c43d775, type: 3}
       propertyPath: m_StaticEditorFlags

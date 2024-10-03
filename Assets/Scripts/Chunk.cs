@@ -4,26 +4,14 @@ using UnityEngine;
 
 public class Chunk
 {
-    // Parameters for Chunk Tasks
-    //
-    // Place a Partial Chunk (Square Grid) Per Task
-    public static int PlacePartialChunkPerTask = 8;
-    // Number of Filler Blocks to Place per Task
-    public static int PlaceFillerBlocksPerTask = 64;
-    // Number of Filler Blocks to Place per Steep Hill
-    public static int FillerBlocksDepth = 2;
-
     public bool IsActive;
 
     private int[,] HeightMap;
 
     private Vector2Int Position;
-    private BlockContainer BlockContainer;
 
-    // List of Big Meshes merged from all Small Block Meshes
-    // Optimized for Rendering
-    private List<GameObject> MeshList;
-
+    public GameObject ChunkGameObject;
+    
     public int GetBlockHeight(Vector2Int GlobalBlockPosition, bool tryLookUpHeightMap = false)
     {
         // Early-Out
@@ -80,18 +68,16 @@ public class Chunk
         }
 
         Position = new Vector2Int(0, 0);
-        BlockContainer = new BlockContainer();
 
-        MeshList = new List<GameObject>();
+        ChunkGameObject = new GameObject("Chunk");
+        ChunkGameObject.AddComponent<MeshFilter>();
+        ChunkGameObject.AddComponent<MeshRenderer>();
     }
 
     public void Generate(Vector2Int StartPosition, Vector2Int EndPosition)
     {
-        //Position = StartPosition;
-        //Vector2Int EndPosition = StartPosition + (new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
-
-        int hx = StartPosition.x - Position.x;
-        int hy = StartPosition.y - Position.y;
+        int hx = 0;//StartPosition.x - Position.x;
+        int hy = 0;//StartPosition.y - Position.y;
         for (int i = StartPosition.y; i < EndPosition.y; ++i)
         {
             for (int j = StartPosition.x; j < EndPosition.x; ++j)
@@ -102,301 +88,30 @@ public class Chunk
                 ++hx;
             }
 
-            hx = StartPosition.x - Position.x;
+            hx = 0;//StartPosition.x - Position.x;
             ++hy;
         }
     }
 
     public void Destroy()
     {
-        BlockContainer.ClearAll();
-
-        BlockContainer = null;
         HeightMap = null;
         IsActive = false;
 
-        for (int i = 0; i < MeshList.Count; ++i)
-        {
-            GameObject.Destroy(MeshList[i]);
-        }
-        MeshList.Clear();
+        GameObject.Destroy(ChunkGameObject);
     }
 
 
     // All Chunk Tasks Go Here
     //
-    public class GeneratePartialHeightMapTask : TaskManager.Task
-    {
-        public Vector2Int in_StartPos;
-        public Vector2Int in_EndPos;
-        public Chunk inout_ChunkRef;
-
-        public override void Execute()
-        {
-            inout_ChunkRef.Generate(in_StartPos, in_EndPos);
-        }
-    }
-
     public class GenerateHeightMapTask : TaskManager.Task
     {
-        public Vector2Int in_StartPos;
         public Chunk inout_ChunkRef;
-
-        public List<GeneratePartialHeightMapTask> PartialChunkTaskList;
-
-        public bool CreatedGenPartialChunkTasks = false;
+        public Vector2Int in_StartPosition;
 
         public override void Execute()
         {
-            WaitingFlag = true;
-
-            int numOfPartialChunks = (WorldData.ChunkSize / PlacePartialChunkPerTask) * (WorldData.ChunkSize / PlacePartialChunkPerTask);
-            
-            if (!CreatedGenPartialChunkTasks)
-            {
-                // Set Chunk Position
-                inout_ChunkRef.Position = in_StartPos;
-
-                // Generate Height Map
-                PartialChunkTaskList = new List<GeneratePartialHeightMapTask>();
-
-                Vector2Int StartPosition = in_StartPos;
-                Vector2Int EndPosition = StartPosition + new Vector2Int(PlacePartialChunkPerTask, PlacePartialChunkPerTask);
-                for (int i = 0; i < numOfPartialChunks; ++i)
-                {
-                    var NewTask = new GeneratePartialHeightMapTask();
-                    NewTask.in_StartPos = StartPosition;
-                    NewTask.in_EndPos = EndPosition;
-                    NewTask.inout_ChunkRef = inout_ChunkRef;
-
-                    PartialChunkTaskList.Add(NewTask);
-                    TaskManager.GetInstance().Enqueue(NewTask);
-
-                    StartPosition.x += PlacePartialChunkPerTask;
-                    if ((i + 1) % (WorldData.ChunkSize / PlacePartialChunkPerTask) == 0)
-                    {
-                        StartPosition.x = in_StartPos.x;
-                        StartPosition.y += PlacePartialChunkPerTask;
-                    }
-
-                    EndPosition = StartPosition + new Vector2Int(PlacePartialChunkPerTask, PlacePartialChunkPerTask);
-                }
-
-                CreatedGenPartialChunkTasks = true;
-            }
-
-            for (int i = 0; i < PartialChunkTaskList.Count; ++i)
-            {
-                if (!PartialChunkTaskList[i].Completed)
-                    return;
-            }
-
-            // Completed
-            WaitingFlag = false;
-        }
-    }
-
-    public class PlaceGrassBlocksTask : TaskManager.Task
-    {
-        public Vector2Int in_StartPos;
-        public int in_SizeToFill;
-        public Grid in_UnityGrid;
-        public Chunk inout_ChunkRef;
-        public List<Vector3Int> inout_HighCellList;
-        public List<int> inout_DepthList;
-
-        private bool IsHighCell(int x, int y)
-        {
-            int[,] HMap = inout_ChunkRef.HeightMap;
-            int Height = HMap[x, y];
-
-            List<int> NeighbourHeightList = new List<int>(8);
-
-            Vector2Int ChunkGlobalPosition = inout_ChunkRef.Position;
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x, y + 1), true) );
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x, y - 1), true) );
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x - 1, y), true) );
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x + 1, y), true) );
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x - 1, y + 1), true));       
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x - 1, y - 1), true));           
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x + 1, y - 1), true));           
-            NeighbourHeightList.Add( inout_ChunkRef.GetBlockHeight(ChunkGlobalPosition + new Vector2Int(x + 1, y + 1), true));
-
-            bool IsHigh = false;
-            int MaxFillDepth = 0;
-            for (int i = 0; i < NeighbourHeightList.Count; ++i)
-            {
-                if (NeighbourHeightList[i] < Height - 1)
-                {
-                    MaxFillDepth = Mathf.Max(MaxFillDepth, Mathf.Abs(Height - NeighbourHeightList[i]));
-                    IsHigh = true;
-                }
-            }
-
-            if (IsHigh) { inout_DepthList.Add(MaxFillDepth); }
-            return IsHigh;
-        }
-
-        public override void Execute()
-        {
-            Vector2Int Position = inout_ChunkRef.Position;
-            BlockContainer BlockContainerRef = inout_ChunkRef.BlockContainer;
-            int[,] HeightMap = inout_ChunkRef.HeightMap;
-
-            for (int i = in_StartPos.y; i < (in_StartPos.y + in_SizeToFill); i++)
-            {
-                for (int j = in_StartPos.x; j < (in_StartPos.x + in_SizeToFill); j++)
-                {
-                    int x = Position.x + j;
-                    int y = HeightMap[j, i];
-                    int z = Position.y + i;
-
-                    var block = BlockContainerRef.CreateBlock();
-
-                    block.transform.position = in_UnityGrid.CellToWorld(new Vector3Int(x, y, z));
-                    if (IsHighCell(j, i))
-                    {
-                        inout_HighCellList.Add(new Vector3Int(x, y, z));
-                    }
-                }
-            }
-        }
-    }
-
-    public class FillEmptyBlocksTask : TaskManager.Task
-    {
-        public int in_StartIndex;
-        public int in_Size;
-        public List<Vector3Int> in_HighCellBlocks;
-        public List<int> in_DepthList;
-        public Chunk inout_ChunkRef;
-        public Grid in_UnityGrid;
-
-        public override void Execute()
-        {
-            BlockContainer BlockContainerRef = inout_ChunkRef.BlockContainer;
-
-            for (int c = in_StartIndex; c < (in_StartIndex + in_Size); ++c)
-            {
-                Vector3Int cell = in_HighCellBlocks[c];
-                int FillDepth = in_DepthList[c];
-                for (int i = cell.y - FillDepth; i < cell.y; ++i)
-                {
-                    var block = BlockContainerRef.CreateBlock(BlockID.DIRT);
-                    block.transform.position = in_UnityGrid.CellToWorld(new Vector3Int(cell.x, i, cell.z));
-                }
-            }
-        }
-    }
-
-    public class PlaceAllBlocksTask : TaskManager.Task
-    {
-        public Chunk inout_ChunkRef;
-        public Grid in_UnityGrid;
-
-        private List<PlaceGrassBlocksTask> PlaceBlocksTaskList = new List<PlaceGrassBlocksTask>();
-        private List<Vector3Int> HighCellList = new List<Vector3Int>();
-        private List<int> FillDepthList = new List<int>();
-        
-        private List<FillEmptyBlocksTask> FillEmptyTaskList = new List<FillEmptyBlocksTask>();
-        
-        private bool CreatedPlaceGrassBlockTasks = false;
-        private bool CreatedPlaceFillerBlockTasks = false;
-
-        private void CreatePlaceGrassBlockTasks()
-        {
-            int NumOfTasksRequired = (WorldData.ChunkSize * WorldData.ChunkSize) / (PlacePartialChunkPerTask * PlacePartialChunkPerTask);
-            int StartX = 0;
-            int StartY = 0;
-            for (int i = 0; i < NumOfTasksRequired; ++i)
-            {
-                StartX = (i * PlacePartialChunkPerTask);
-                if (StartX >= WorldData.ChunkSize)
-                {
-                    StartX = StartX % WorldData.ChunkSize;
-                    if (StartX == 0)
-                    {
-                        StartY += PlacePartialChunkPerTask;
-                    }
-                }
-
-                PlaceBlocksTaskList.Add(new PlaceGrassBlocksTask());
-                PlaceGrassBlocksTask NewTask = PlaceBlocksTaskList[PlaceBlocksTaskList.Count - 1];
-                NewTask.in_UnityGrid = in_UnityGrid;
-                NewTask.inout_HighCellList = HighCellList;
-                NewTask.inout_DepthList = FillDepthList;
-                NewTask.inout_ChunkRef = inout_ChunkRef;
-                NewTask.in_StartPos = new Vector2Int(StartX, StartY);
-                NewTask.in_SizeToFill = PlacePartialChunkPerTask;
-
-                TaskManager.GetInstance().Enqueue(NewTask);
-            }
-        }
-
-        private void CreateFillerBlocksTasks()
-        {
-            int NumOfTasksRequired = Mathf.CeilToInt((float)(HighCellList.Count * FillerBlocksDepth) / (float)(PlaceFillerBlocksPerTask));
-            for (int i = 0; i < NumOfTasksRequired; ++i)
-            {
-                int StartIndex = i * PlaceFillerBlocksPerTask;
-                int Size = PlaceFillerBlocksPerTask;
-                if ((StartIndex + Size) > HighCellList.Count)
-                {
-                    Size = HighCellList.Count - StartIndex;
-                }
-
-                FillEmptyTaskList.Add(new FillEmptyBlocksTask());
-                FillEmptyBlocksTask NewTask = FillEmptyTaskList[FillEmptyTaskList.Count - 1];
-                NewTask.in_UnityGrid = in_UnityGrid;
-                NewTask.in_HighCellBlocks = HighCellList;
-                NewTask.in_DepthList = FillDepthList;
-                NewTask.inout_ChunkRef = inout_ChunkRef;
-                NewTask.in_StartIndex = StartIndex;
-                NewTask.in_Size = Size;
-
-                TaskManager.GetInstance().Enqueue(NewTask);
-            }
-        }
-
-        public override void Execute()
-        {
-            WaitingFlag = true;
-            if (!CreatedPlaceGrassBlockTasks)
-            {
-                CreatePlaceGrassBlockTasks();
-
-                CreatedPlaceGrassBlockTasks = true;
-            }
-
-            // Wait For All Tasks to be Finished
-            for (int i = 0; i < PlaceBlocksTaskList.Count; ++i)
-            {
-                if (!PlaceBlocksTaskList[i].Completed)
-                {
-                    return;
-                }
-            }
-
-            // All Initial Blocks Filled
-            //
-            // Fill Empty Areas
-            if (!CreatedPlaceFillerBlockTasks)
-            {
-                CreateFillerBlocksTasks();
-
-                CreatedPlaceFillerBlockTasks = true;
-            }
-
-            // Wait For All Tasks to be Finished
-            for (int i = 0; i < FillEmptyTaskList.Count; ++i)
-            {
-                if (!FillEmptyTaskList[i].Completed)
-                {
-                    return;
-                }
-            }
-
-            WaitingFlag = false;
+            inout_ChunkRef.Generate(in_StartPosition, in_StartPosition + new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
         }
     }
 
@@ -405,7 +120,7 @@ public class Chunk
         public Chunk inout_ChunkRef;
 
         private bool CreatedMergeTask = false;
-        private BlockContainer.GenerateMergedMeshesTask MergeTask;
+        private ChunkMeshGeneratorTask MeshGenTask;
 
         public override void Execute()
         {
@@ -414,30 +129,21 @@ public class Chunk
             // Generate the Meshes
             if (!CreatedMergeTask)
             {
-                MergeTask = new BlockContainer.GenerateMergedMeshesTask();
-                MergeTask.in_BlockList = inout_ChunkRef.BlockContainer.BlockList;
-                MergeTask.in_MaxMeshesCombine = 512;
+                MeshGenTask = new ChunkMeshGeneratorTask();
+                MeshGenTask.inout_ChunkGameObject = inout_ChunkRef.ChunkGameObject;
+                MeshGenTask.in_HeightMap = inout_ChunkRef.HeightMap;
 
-                TaskManager.GetInstance().Enqueue(MergeTask);
+                TaskManager.GetInstance().Enqueue(MeshGenTask);
 
                 CreatedMergeTask = true;
             }
 
-            if (!MergeTask.Completed)
+            if (!MeshGenTask.Completed)
             {
                 return;
             }
-            
-            // Assign a GameObject to these Meshes
-            List<Mesh> Meshes = MergeTask.out_MeshList;
-            inout_ChunkRef.MeshList = new List<GameObject>(Meshes.Count);
-            for (int i = 0; i < Meshes.Count; ++i)
-            {
-                inout_ChunkRef.MeshList.Add(BlockPool.GetInstance().CreateDummyBlock());
-                inout_ChunkRef.MeshList[i].GetComponent<MeshFilter>().sharedMesh = Meshes[i];
-                inout_ChunkRef.MeshList[i].SetActive(true);
-            }
 
+         
             WaitingFlag = false;
         }
     }
@@ -451,10 +157,8 @@ public class Chunk
 
         // Chunk Generation Parameters
         private bool CreatedGenerateTask = false;
-        private bool CreatedPlaceBlocksTask = false;
         private bool CreatedGenerateChunkMeshTask = false;
         private GenerateHeightMapTask GenMapTask;
-        private PlaceAllBlocksTask PlaceBlocksTask;
         private GenerateChunkMeshTask GenChunkMeshTask;
 
         public override void Execute()
@@ -465,7 +169,7 @@ public class Chunk
             {
                 GenMapTask = new GenerateHeightMapTask();
                 GenMapTask.inout_ChunkRef = inout_ChunkRef;
-                GenMapTask.in_StartPos = in_StartPosition;
+                GenMapTask.in_StartPosition = in_StartPosition;
                 
                 TaskManager.GetInstance().Enqueue(GenMapTask);
 
@@ -478,23 +182,6 @@ public class Chunk
                 return;
             }
             // Map has been Generated
-
-            if (!CreatedPlaceBlocksTask)
-            {
-                PlaceBlocksTask = new PlaceAllBlocksTask();
-                PlaceBlocksTask.inout_ChunkRef = inout_ChunkRef;
-                PlaceBlocksTask.in_UnityGrid = in_UnityGrid;
-
-                TaskManager.GetInstance().Enqueue(PlaceBlocksTask);
-
-                CreatedPlaceBlocksTask = true;
-            }
-
-            if (!PlaceBlocksTask.Completed)
-            {
-                return;
-            }
-            // Chunk Generation Complete
 
             // Merge all Blocks into a Single Mesh
             if (!CreatedGenerateChunkMeshTask)
@@ -514,6 +201,7 @@ public class Chunk
             }
 
             // Finally Set the Chunk to Active
+            inout_ChunkRef.ChunkGameObject.transform.position = new Vector3(in_StartPosition.x, 0, in_StartPosition.y);
             inout_ChunkRef.IsActive = true;
             WaitingFlag = false;
         }

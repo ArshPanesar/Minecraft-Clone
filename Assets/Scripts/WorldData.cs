@@ -20,6 +20,8 @@ public class WorldData
 
     public static Vector3 PlayerPosition;
 
+    public static Material TextureAtlasMaterial;
+
     static WorldData()
     {
         Evaluate();
@@ -34,5 +36,7 @@ public class WorldData
         TerrainNoiseParam = new NoiseGenerator.NoiseParameters();
 
         PlayerPosition = Vector3.zero;
+
+        TextureAtlasMaterial = Resources.Load<Material>("Materials/texture_atlas");
     }
 }
