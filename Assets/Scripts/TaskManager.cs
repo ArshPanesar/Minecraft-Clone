@@ -57,8 +57,9 @@ public class TaskManager
 
     public void Update()
     {
-        int i = 0;
-        while (TaskQueue.Count > 0 && i < NumOfTasksPerUpdate)
+        int NonWaitingTaskCounter = 0;
+        int TaskCounter = 0;
+        while (TaskQueue.Count > 0 && (NonWaitingTaskCounter < NumOfTasksPerUpdate || TaskCounter < TaskQueue.Count))
         {
             Task NewTask = TaskQueue.Dequeue();
             
@@ -69,7 +70,8 @@ public class TaskManager
                 Enqueue(NewTask);
             }
 
-            ++i;
+            NonWaitingTaskCounter = NewTask.WaitingFlag ? NonWaitingTaskCounter : NonWaitingTaskCounter + 1;
+            TaskCounter++;
         }
     }
 }
