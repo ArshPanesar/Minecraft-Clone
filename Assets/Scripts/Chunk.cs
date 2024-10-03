@@ -112,12 +112,14 @@ public class Chunk
         public override void Execute()
         {
             inout_ChunkRef.Generate(in_StartPosition, in_StartPosition + new Vector2Int(WorldData.ChunkSize, WorldData.ChunkSize));
+            inout_ChunkRef.Position = in_StartPosition;
         }
     }
 
     public class GenerateChunkMeshTask : TaskManager.Task
     {
         public Chunk inout_ChunkRef;
+        public Vector2Int in_StartPosition;
 
         private bool CreatedMergeTask = false;
         private ChunkMeshGeneratorTask MeshGenTask;
@@ -132,6 +134,8 @@ public class Chunk
                 MeshGenTask = new ChunkMeshGeneratorTask();
                 MeshGenTask.inout_ChunkGameObject = inout_ChunkRef.ChunkGameObject;
                 MeshGenTask.in_HeightMap = inout_ChunkRef.HeightMap;
+                MeshGenTask.in_ChunkRef = inout_ChunkRef;
+                MeshGenTask.in_Position = in_StartPosition;
 
                 TaskManager.GetInstance().Enqueue(MeshGenTask);
 
@@ -188,6 +192,7 @@ public class Chunk
             {
                 GenChunkMeshTask = new GenerateChunkMeshTask();
                 GenChunkMeshTask.inout_ChunkRef = inout_ChunkRef;
+                GenChunkMeshTask.in_StartPosition = in_StartPosition;
 
                 TaskManager.GetInstance().Enqueue(GenChunkMeshTask);
                 
