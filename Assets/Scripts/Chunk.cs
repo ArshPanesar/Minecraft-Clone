@@ -37,22 +37,22 @@ public class Chunk
         // Scaling Height from [-1, 1] Range
         int height = (int)(((noise + 0.5f) / (0.5f - (-0.5f))) * ((float)WorldData.MaxHeight - (float)WorldData.MinHeight) + (float)WorldData.MinHeight);
 
-        if (height < 20)
-        {
-            height = 20;
-        }
-        else if (height < 25)
-        {
-            height = 21;
-        }
-        else if (height < 30)
-        {
-            height = 22;
-        }
-        else
-        {
-            height -= 7;
-        }
+        //if (height < 20)
+        //{
+        //    height = 20;
+        //}
+        //else if (height < 25)
+        //{
+        //    height = 21;
+        //}
+        //else if (height < 30)
+        //{
+        //    height = 22;
+        //}
+        //else
+        //{
+        //    height -= 7;
+        //}
 
         return height;
     }
